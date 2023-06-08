@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type Hackertarget struct {
@@ -27,7 +28,9 @@ func (s *Hackertarget) ScanSubdomains(domain string) ([]string, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(body))
+	if !strings.Contains(string(body), domain) {
+		print(string(body))
+	}
 
 	return nil, nil
 }
