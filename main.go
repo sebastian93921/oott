@@ -10,46 +10,50 @@ import (
 
 func main() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains")
+	subdomainScan := flag.Bool("subdomain-scan", false, "Perform subdomain scanning")
 	flag.Parse()
 
 	if *domain == "" {
 		log.Fatal("Please provide the '-domain' argument")
 	}
 
-	fmt.Println("Scanning subdomains...")
+	if *subdomainScan {
 
-	subdomainScanResults := []subdomains.SubDomainScanner{
-		&subdomains.Hackertarget{}, // Has max API Limit
-		&subdomains.Leakix{},
-		&subdomains.Alienvault{},
-		&subdomains.Archiveorg{},
-		&subdomains.Rapiddns{},
-		// &subdomains.Threatminer{},
-		&subdomains.Urlscan{},
-		&subdomains.Massdns{}, // Wildcard subdomain issue
-		&subdomains.SimpleScan{},
-		// Add more SubDomainScanner implementations here
-	}
+		fmt.Println("Scanning subdomains...")
 
-	var subdomainLists []subdomains.SubDomainDetails
-	for _, sf := range subdomainScanResults {
-		subdomains, err := sf.ScanSubdomains(*domain)
-		if err != nil {
-			log.Fatal(err)
+		subdomainScanResults := []subdomains.SubDomainScanner{
+			&subdomains.Hackertarget{}, // Has max API Limit
+			&subdomains.Leakix{},
+			&subdomains.Alienvault{},
+			&subdomains.Archiveorg{},
+			&subdomains.Rapiddns{},
+			// &subdomains.Threatminer{},
+			&subdomains.Urlscan{},
+			&subdomains.Massdns{}, // Wildcard subdomain issue
+			&subdomains.SimpleScan{},
+			// Add more SubDomainScanner implementations here
 		}
 
-		for _, subdomain := range subdomains {
-			if subdomain.DomainName != "" {
-				subdomainLists = append(subdomainLists, subdomain)
+		var subdomainLists []subdomains.SubDomainDetails
+		for _, sf := range subdomainScanResults {
+			subdomains, err := sf.ScanSubdomains(*domain)
+			if err != nil {
+				log.Fatal(err)
 			}
+
+			for _, subdomain := range subdomains {
+				if subdomain.DomainName != "" {
+					subdomainLists = append(subdomainLists, subdomain)
+				}
+			}
+
+			subdomainLists = aggregateSubDomainDetails(subdomainLists)
+
 		}
 
-		subdomainLists = aggregateSubDomainDetails(subdomainLists)
-
-	}
-
-	for _, subdomain := range subdomainLists {
-		fmt.Printf("Domain: %-40s Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
+		for _, subdomain := range subdomainLists {
+			fmt.Printf("Domain: %-40s Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
+		}
 	}
 }
 
