@@ -22,15 +22,15 @@ func main() {
 		fmt.Println("[+] Scanning subdomains...")
 
 		subdomainScanResults := []subdomains.SubDomainScanner{
-			// &subdomains.Hackertarget{}, // Has max API Limit
-			// &subdomains.Leakix{},
-			// &subdomains.Alienvault{},
-			// &subdomains.Archiveorg{},
-			// &subdomains.Rapiddns{},
-			// // &subdomains.Threatminer{},
-			// &subdomains.Urlscan{},
+			&subdomains.Hackertarget{}, // Has max API Limit
+			&subdomains.Leakix{},
+			&subdomains.Alienvault{},
+			&subdomains.Archiveorg{},
+			&subdomains.Rapiddns{},
+			// &subdomains.Threatminer{},
+			&subdomains.Urlscan{},
 			&subdomains.Massdns{}, // Wildcard subdomain issue
-			// &subdomains.SimpleScan{},
+			&subdomains.SimpleScan{},
 			// Add more SubDomainScanner implementations here
 		}
 
