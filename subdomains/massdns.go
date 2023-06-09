@@ -12,7 +12,7 @@ import (
 )
 
 type Massdns struct {
-	// any necessary fields specific
+	ScannedSubdomains []SubDomainDetails
 }
 
 var massdnsCommand = "massdns"
@@ -62,39 +62,22 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		subdomainPrefixes = append(subdomainPrefixes, line)
 	}
 
-	subdomainEnumerateOutput := tmpfolder + "/temp-domain.txt"
-
-	// Open the file for writing (create new or truncate existing)
-	file, err = os.OpenFile(subdomainEnumerateOutput, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		fmt.Printf("[!] Failed to open file: %v\n", err)
-		return nil, nil
-	}
-	defer file.Close()
-
 	var subdomainsString []string
 
 	// Iterate over the subdomain prefixes
 	for _, prefix := range subdomainPrefixes {
 		subdomain := fmt.Sprintf("%s.%s", prefix, domain)
-		_, err := fmt.Fprintf(file, "%s\n", subdomain)
-		if err != nil {
-			fmt.Printf("[!] Failed to write domain to file: %v\n", err)
-			return nil, nil
-		}
-
 		subdomainsString = append(subdomainsString, subdomain)
 	}
 
-	fmt.Printf("[+] Domains saved to %s\n", subdomainEnumerateOutput)
-
 	// Call the MassDNS command with the subdomain
-	err = runMassDNS(resolversFilePath, subdomainsString)
+	err = s.runMassDNS(resolversFilePath, subdomainsString)
 	if err != nil {
-		fmt.Println("Error running MassDNS:", err)
+		fmt.Println("[!] Error running MassDNS:", err)
+		return nil, nil
 	}
 
-	return nil, nil
+	return s.ScannedSubdomains, nil
 }
 
 func downloadFile(url string, filePath string) error {
@@ -144,22 +127,22 @@ func isMassDNSInstalled() bool {
 	return true
 }
 
-func runMassDNS(resolversFilePath string, subdomains []string) error {
+func (s *Massdns) runMassDNS(resolversFilePath string, subdomains []string) error {
 	// Check for wildcard domain
 
 	fmt.Println("[+] Size of subdomains generated: ", len(subdomains))
-	err := runMassDNSByType(resolversFilePath, subdomains, "A")
+	err := s.runMassDNSByType(resolversFilePath, subdomains, "A")
 	if err != nil {
 		return err
 	}
-	err = runMassDNSByType(resolversFilePath, subdomains, "AAAA")
+	err = s.runMassDNSByType(resolversFilePath, subdomains, "AAAA")
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func runMassDNSByType(resolversFilePath string, subdomains []string, domaintype string) error {
+func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string, domaintype string) error {
 	// Type A first
 	cmd := exec.Command(massdnsCommand, "-r", resolversFilePath, "-t", domaintype, "-s", "500", "-o", "J", "-q")
 	// Create a concatenated string of the list elements
@@ -216,22 +199,28 @@ func runMassDNSByType(resolversFilePath string, subdomains []string, domaintype 
 			}
 			// Iterate over the answers
 			isCorrectType := false
+			var address string
 			for _, answer := range answers {
 				answerMap := answer.(map[string]interface{})
-				name := answerMap["name"].(string)
 				answerType := answerMap["type"].(string)
-				fmt.Println("Name:", name)
-				fmt.Println("Type:", answerType)
 
 				if answerType == domaintype {
 					isCorrectType = true
+					address = answerMap["data"].(string)
 					break
 				}
 			}
 
 			if isCorrectType {
-				fmt.Println(line)
-				fmt.Printf("[MassDNS] Name: %s, Type: %s, Status: %s, Count: %d/%d(%d%%)\n", name, typeVal, status, scanCount, total, (scanCount * 100 / total))
+				// fmt.Println(line)
+				fmt.Printf("[MassDNS] Name: %s, Type: %s, Status: %s, Progress: %d/%d(%d%%)\n", name, typeVal, status, scanCount, total, (scanCount * 100 / total))
+				subdomain := SubDomainDetails{
+					DomainName: strings.TrimSuffix(name, "."),
+					Address:    address,
+					Type:       typeVal,
+					ModuleName: "Massdns",
+				}
+				s.ScannedSubdomains = append(s.ScannedSubdomains, subdomain)
 			}
 		}
 	}

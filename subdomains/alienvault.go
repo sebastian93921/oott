@@ -50,6 +50,7 @@ func (s *Alienvault) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		subdomain := SubDomainDetails{
 			DomainName: entry["hostname"].(string),
 			Type:       entry["record_type"].(string),
+			ModuleName: "Alienvault",
 		}
 		subdomains = append(subdomains, subdomain)
 	}

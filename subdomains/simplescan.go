@@ -170,12 +170,13 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 		}
 
 		// Subdomain exists, print the IP addresses
-		fmt.Printf("[+] Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
+		fmt.Printf("[SimpleScan] Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
 
 		//If exists, save it and break the loop
 		subdomain := SubDomainDetails{
 			DomainName: subdomainTarget,
 			Address:    addresses[0],
+			ModuleName: "SimpleScan",
 		}
 		s.ScannedSubdomains = append(s.ScannedSubdomains, subdomain)
 		break

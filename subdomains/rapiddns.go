@@ -50,6 +50,7 @@ func (s *Rapiddns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 			DomainName: domain,
 			Address: address,
 			Type: domaintype,
+			ModuleName: "Rapiddns",
 		}
 
 		subdomains = append(subdomains, subdomain)

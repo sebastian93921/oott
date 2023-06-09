@@ -49,7 +49,7 @@ func main() {
 	}
 
 	for _, subdomain := range subdomainLists {
-		fmt.Printf("Domain: %-40s Address: %-40s Type: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type)
+		fmt.Printf("Domain: %-40s Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
 	}
 }
 

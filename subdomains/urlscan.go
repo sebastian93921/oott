@@ -97,6 +97,7 @@ func (s *Urlscan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		if strings.Contains(p.Task.Domain, domain) {
 			subdomain := SubDomainDetails{
 				DomainName: p.Task.Domain,
+				ModuleName: "Urlscan",
 			}
 			subdomains = append(subdomains, subdomain)
 		}

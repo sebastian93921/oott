@@ -8,6 +8,7 @@ type SubDomainDetails struct {
 	DomainName string
 	Address    string
 	Type       string
+	ModuleName string
 }
 
 // List of subdomain prefixes
