@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -72,6 +74,22 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, nil
 	}
 
+	// Create a channel to receive the interrupt signal
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+
+	// Create a channel to signal cancellation
+	cancel = make(chan struct{})
+
+	// Start a goroutine to listen for the interrupt signal
+	go func() {
+		// Wait for the interrupt signal
+		<-interrupt
+		fmt.Println("\n[!] Ctrl+C pressed. Exiting...")
+		// Signal cancellation to stop the thread
+		close(cancel)
+	}()
+
 	// Create workers
 	taskCh := make(chan SubdomainTask)
 	doneCh := make(chan struct{})
@@ -88,14 +106,20 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	count := 0
 	totalSubdomain := len(subdomainsString)
 	for _, subdomainStr := range subdomainsString {
-		count++
-		fmt.Printf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
-		task := SubdomainTask{
-			SubdomainTarget: subdomainStr,
-			DNSServers:      dnsServers,
-			Timeout:         timeout,
+		select {
+		case <-cancel:
+			// Scanner canceled, exit the loop
+			break
+		default:
+			count++
+			fmt.Printf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
+			task := SubdomainTask{
+				SubdomainTarget: subdomainStr,
+				DNSServers:      dnsServers,
+				Timeout:         timeout,
+			}
+			taskCh <- task
 		}
-		taskCh <- task
 	}
 	close(taskCh)
 
@@ -104,6 +128,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		<-doneCh
 	}
 
+	fmt.Println("[-] SimpleScan Finished, total subdomains found: ", len(s.ScannedSubdomains))
 	return s.ScannedSubdomains, nil
 }
 
@@ -150,40 +175,46 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 	count := 0
 	// Perform DNS lookup using different DNS servers
 	for _, dnsServer := range randomDnsServers {
-		count++
-		resolver := &net.Resolver{
-			PreferGo: true,
-			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-				d := net.Dialer{}
-				return d.DialContext(ctx, network, dnsServer+":53") // Add 53 port for DNS service
-			},
+		select {
+		case <-cancel:
+			// Scanner canceled, exit the loop
+			break
+		default:
+			count++
+			resolver := &net.Resolver{
+				PreferGo: true,
+				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+					d := net.Dialer{}
+					return d.DialContext(ctx, network, dnsServer+":53") // Add 53 port for DNS service
+				},
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+
+			addresses, err := resolver.LookupHost(ctx, subdomainTarget)
+			if err != nil {
+				// if err, ok := err.(net.Error); ok && err.Timeout() {
+				// 	// DNS lookup timed out
+				// 	fmt.Printf("DNS lookup timed out for subdomain '%s' on DNS server %s\n", subdomainTarget, dnsServer)
+				// } else {
+				// 	// Subdomain doesn't exist or encountered another error
+				// 	fmt.Printf("Subdomain '%s' does not exist or encountered an error on DNS server %s: %v\n", subdomainTarget, dnsServer, err)
+				// }
+				continue
+			}
+
+			// Subdomain exists, print the IP addresses
+			fmt.Printf("[SimpleScan] Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
+
+			//If exists, save it and break the loop
+			subdomain := SubDomainDetails{
+				DomainName: subdomainTarget,
+				Address:    addresses[0],
+				ModuleName: "SimpleScan",
+			}
+			s.ScannedSubdomains = append(s.ScannedSubdomains, subdomain)
+			break
 		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-
-		addresses, err := resolver.LookupHost(ctx, subdomainTarget)
-		if err != nil {
-			// if err, ok := err.(net.Error); ok && err.Timeout() {
-			// 	// DNS lookup timed out
-			// 	fmt.Printf("DNS lookup timed out for subdomain '%s' on DNS server %s\n", subdomainTarget, dnsServer)
-			// } else {
-			// 	// Subdomain doesn't exist or encountered another error
-			// 	fmt.Printf("Subdomain '%s' does not exist or encountered an error on DNS server %s: %v\n", subdomainTarget, dnsServer, err)
-			// }
-			continue
-		}
-
-		// Subdomain exists, print the IP addresses
-		fmt.Printf("[SimpleScan] Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
-
-		//If exists, save it and break the loop
-		subdomain := SubDomainDetails{
-			DomainName: subdomainTarget,
-			Address:    addresses[0],
-			ModuleName: "SimpleScan",
-		}
-		s.ScannedSubdomains = append(s.ScannedSubdomains, subdomain)
-		break
 	}
 }
