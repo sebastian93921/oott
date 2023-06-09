@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
+	"time"
 
 	"oott/subdomains"
 )
@@ -11,6 +13,7 @@ import (
 func main() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains")
 	subdomainScan := flag.Bool("subdomain-scan", false, "Perform subdomain scanning")
+	httpStatusCodeTest := flag.Bool("http-status-code", false, "Get HTTP status code for each subdomain found")
 	flag.Parse()
 
 	if *domain == "" {
@@ -22,14 +25,14 @@ func main() {
 		fmt.Println("[+] Scanning subdomains...")
 
 		subdomainScanResults := []subdomains.SubDomainScanner{
-			&subdomains.Hackertarget{}, // Has max API Limit
-			&subdomains.Leakix{},
-			&subdomains.Alienvault{},
-			&subdomains.Archiveorg{},
-			&subdomains.Rapiddns{},
-			// &subdomains.Threatminer{},
-			&subdomains.Urlscan{},
-			&subdomains.Massdns{}, // Wildcard subdomain issue
+			// &subdomains.Hackertarget{}, // Has max API Limit
+			// &subdomains.Leakix{},
+			// &subdomains.Alienvault{},
+			// &subdomains.Archiveorg{},
+			// &subdomains.Rapiddns{},
+			// // &subdomains.Threatminer{},
+			// &subdomains.Urlscan{},
+			// &subdomains.Massdns{}, // Wildcard subdomain issue
 			&subdomains.SimpleScan{},
 			// Add more SubDomainScanner implementations here
 		}
@@ -52,7 +55,20 @@ func main() {
 		}
 
 		for _, subdomain := range subdomainLists {
-			fmt.Printf("Domain: %-40s Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
+			if *httpStatusCodeTest {
+				client := http.Client {
+					Timeout: time.Second * 2,
+				}
+
+				resp, err := client.Get("https://" + subdomain.DomainName)
+				if err != nil {
+					fmt.Printf("Domain: %-40s HTTP status code: ERR        Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
+				} else {
+					fmt.Printf("Domain: %-40s HTTP status code: %-10d Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, resp.StatusCode, subdomain.Address, subdomain.Type, subdomain.ModuleName)
+				}
+			} else {
+				fmt.Printf("Domain: %-40s Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
+			}
 		}
 	}
 }
