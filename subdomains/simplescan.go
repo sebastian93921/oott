@@ -23,16 +23,16 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	fmt.Println("[+] Scanning subdomains on SimpleScan:", domain)
 
 	wordlistFilePath := tmpfolder + "/subdomains-prefix.txt"
-	resolversFilePath := tmpfolder + "/dns-resolvers.txt"
+	// resolversFilePath := tmpfolder + "/dns-resolvers.txt"
 	timeout := 200 * time.Millisecond // Adjust timeout duration as needed
 	workerCount := 10                 // Number of worker goroutines
 
-	// Download the file
-	err := downloadFile(resolversUrl, resolversFilePath)
-	if err != nil {
-		fmt.Println("[!] Error downloading file:", err)
-		return nil, nil
-	}
+	// // Download the file
+	// err := downloadFile(resolversUrl, resolversFilePath)
+	// if err != nil {
+	// 	fmt.Println("[!] Error downloading file:", err)
+	// 	return nil, nil
+	// }
 
 	// Download the file
 	err = downloadFile(wordlist, wordlistFilePath)
