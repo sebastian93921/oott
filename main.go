@@ -14,12 +14,12 @@ func main() {
 	flag.Parse()
 
 	if *domain == "" {
-		log.Fatal("Please provide the '-domain' argument")
+		log.Fatal("[!] Please provide the '-domain' argument")
 	}
 
 	if *subdomainScan {
 
-		fmt.Println("Scanning subdomains...")
+		fmt.Println("[+] Scanning subdomains...")
 
 		subdomainScanResults := []subdomains.SubDomainScanner{
 			&subdomains.Hackertarget{}, // Has max API Limit
