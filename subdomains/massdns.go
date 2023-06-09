@@ -142,8 +142,13 @@ func (s *Massdns) runMassDNS(resolversFilePath string, subdomains []string) erro
 		close(cancel)
 	}()
 
-	fmt.Println("[+] Size of subdomains generated: ", len(subdomains))
-	err := s.runMassDNSByType(resolversFilePath, subdomains, "A")
+	fmt.Println("[+] Size of subdomains generated: ", len(subdomains), " . Start running, please wait..")
+	fmt.Println("[+] Press Ctrl+C to cancel this operation if it doesn't produce any results for an extended period of time.")
+	err := s.runMassDNSByType(resolversFilePath, subdomains, "CNAME")
+	if err != nil {
+		return err
+	}
+	err = s.runMassDNSByType(resolversFilePath, subdomains, "A")
 	if err != nil {
 		return err
 	}
