@@ -145,6 +145,8 @@ func isMassDNSInstalled() bool {
 }
 
 func runMassDNS(resolversFilePath string, subdomains []string) error {
+	// Check for wildcard domain
+
 	fmt.Println("[+] Size of subdomains generated: ", len(subdomains))
 	err := runMassDNSByType(resolversFilePath, subdomains, "A")
 	if err != nil {
@@ -204,7 +206,33 @@ func runMassDNSByType(resolversFilePath string, subdomains []string, domaintype 
 
 		// Print the extracted values
 		if status == "NOERROR" {
-			fmt.Printf("[MassDNS] Name: %s, Type: %s, Status: %s, Count: %d/%d(%d%%)\n", name, typeVal, status, scanCount, total, (scanCount * 100 / total))
+			// Access the "data" field
+			data := result["data"].(map[string]interface{})
+
+			// Access the "answers" field within "data"
+			answers, ok := data["answers"].([]interface{})
+			if !ok {
+				continue
+			}
+			// Iterate over the answers
+			isCorrectType := false
+			for _, answer := range answers {
+				answerMap := answer.(map[string]interface{})
+				name := answerMap["name"].(string)
+				answerType := answerMap["type"].(string)
+				fmt.Println("Name:", name)
+				fmt.Println("Type:", answerType)
+
+				if answerType == domaintype {
+					isCorrectType = true
+					break
+				}
+			}
+
+			if isCorrectType {
+				fmt.Println(line)
+				fmt.Printf("[MassDNS] Name: %s, Type: %s, Status: %s, Count: %d/%d(%d%%)\n", name, typeVal, status, scanCount, total, (scanCount * 100 / total))
+			}
 		}
 	}
 
