@@ -29,9 +29,25 @@ func (s *Hackertarget) ScanSubdomains(domain string) ([]SubDomainDetails, error)
 	}
 
 	if !strings.Contains(string(body), domain) {
-		print(string(body))
+		fmt.Println(string(body))
 		return nil, nil
 	}
 
-	return nil, nil
+	var subdomains []SubDomainDetails
+
+	subdomainsString := strings.Split(string(body), "\n")
+	for _, subdomainString := range subdomainsString {
+		domainIP := strings.Split(subdomainString, ",")
+		domain := strings.TrimSpace(domainIP[0])
+		ip := strings.TrimSpace(domainIP[1])
+
+		subdomain := SubDomainDetails{
+			DomainName: domain,
+			Address:    ip,
+		}
+
+		subdomains = append(subdomains, subdomain)
+	}
+
+	return subdomains, nil
 }
