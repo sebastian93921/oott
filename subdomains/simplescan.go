@@ -24,7 +24,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	wordlistFilePath := tmpfolder + "/subdomains-prefix.txt"
 	resolversFilePath := tmpfolder + "/dns-resolvers.txt"
-	timeout := 500 * time.Millisecond // Adjust timeout duration as needed
+	timeout := 200 * time.Millisecond // Adjust timeout duration as needed
 	workerCount := 10                 // Number of worker goroutines
 
 	// Download the file
@@ -55,8 +55,19 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	}
 	fmt.Println("[+] Load wordlist successfully.")
 
-	dnsServers := readFileLinebyLine(resolversFilePath)
-	if subdomainPrefixes == nil {
+	dnsServers := []string{
+		"8.8.8.8",        // Google Public DNS
+		"1.1.1.1",        // Cloudflare DNS
+		"208.67.222.222", // OpenDNS
+		"9.9.9.9",        // Quad9 DNS
+		"64.6.64.6",      // Verisign Public DNS
+		"8.26.56.26",     // Comodo Secure DNS
+		"199.85.126.20",  // Norton ConnectSafe
+		"208.76.50.50",   // Alternate DNS
+		"185.228.168.9",  // CleanBrowsing DNS
+		"8.8.4.4",        // Google Public DNS Secondary
+	}
+	if dnsServers == nil {
 		return nil, nil
 	}
 
@@ -73,7 +84,11 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	}
 
 	// Enqueue tasks
+	count := 0
+	totalSubdomain := len(subdomainsString)
 	for _, subdomainStr := range subdomainsString {
+		count++
+		fmt.Printf("[+] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
 		task := SubdomainTask{
 			SubdomainTarget: subdomainStr,
 			DNSServers:      dnsServers,
@@ -111,14 +126,26 @@ func readFileLinebyLine(wordlistFilePath string) []string {
 	return lines
 }
 
+// func pickRandomDNSServers(dnsServers []string, count int) []string {
+// 	// Set a random seed based on the current time
+// 	rand.Seed(time.Now().UnixNano())
+
+// 	// Shuffle the dnsServers slice
+// 	rand.Shuffle(len(dnsServers), func(i, j int) {
+// 		dnsServers[i], dnsServers[j] = dnsServers[j], dnsServers[i]
+// 	})
+
+// 	// Take the first 'count' elements as the random subset
+// 	return dnsServers[:count]
+// }
+
 func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, dnsServers []string, timeout time.Duration) {
-	fmt.Println("[+] Start on subdomain: ", subdomainTarget)
-	totalDnsservers := len(dnsServers)
+	fmt.Println("[-] Start on subdomain: ", subdomainTarget)
+	// randomDnsServers := pickRandomDNSServers(dnsServers, 500)
 	count := 0
 	// Perform DNS lookup using different DNS servers
 	for _, dnsServer := range dnsServers {
 		count++
-		fmt.Println("[-] Domain [", subdomainTarget, "] Progress: ", count, "/", totalDnsservers, "-", count*100/totalDnsservers, "%")
 		resolver := &net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
@@ -143,7 +170,7 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 		}
 
 		// Subdomain exists, print the IP addresses
-		fmt.Printf("Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
+		fmt.Printf("[+] Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
 
 		//If exists, save it and break the loop
 		subdomain := SubDomainDetails{
