@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"math/rand"
 	"net"
 	"os"
 	"time"
@@ -126,25 +127,29 @@ func readFileLinebyLine(wordlistFilePath string) []string {
 	return lines
 }
 
-// func pickRandomDNSServers(dnsServers []string, count int) []string {
-// 	// Set a random seed based on the current time
-// 	rand.Seed(time.Now().UnixNano())
+func pickRandomDNSServers(dnsServers []string, count int) []string {
+	if len(dnsServers) <= count {
+		return dnsServers
+	}
 
-// 	// Shuffle the dnsServers slice
-// 	rand.Shuffle(len(dnsServers), func(i, j int) {
-// 		dnsServers[i], dnsServers[j] = dnsServers[j], dnsServers[i]
-// 	})
+	// Set a random seed based on the current time
+	rand.Seed(time.Now().UnixNano())
 
-// 	// Take the first 'count' elements as the random subset
-// 	return dnsServers[:count]
-// }
+	// Shuffle the dnsServers slice
+	rand.Shuffle(len(dnsServers), func(i, j int) {
+		dnsServers[i], dnsServers[j] = dnsServers[j], dnsServers[i]
+	})
+
+	// Take the first 'count' elements as the random subset
+	return dnsServers[:count]
+}
 
 func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, dnsServers []string, timeout time.Duration) {
 	fmt.Println("[-] Start on subdomain: ", subdomainTarget)
-	// randomDnsServers := pickRandomDNSServers(dnsServers, 500)
+	randomDnsServers := pickRandomDNSServers(dnsServers, 500)
 	count := 0
 	// Perform DNS lookup using different DNS servers
-	for _, dnsServer := range dnsServers {
+	for _, dnsServer := range randomDnsServers {
 		count++
 		resolver := &net.Resolver{
 			PreferGo: true,
