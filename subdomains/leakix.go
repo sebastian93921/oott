@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type Leakix struct {
@@ -28,7 +29,10 @@ func (s *Leakix) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, err
 	}
 
-	fmt.Println(string(body))
+	if !strings.Contains(string(body), domain) {
+		fmt.Println(string(body))
+		return nil, nil
+	}
 
 	// Define a struct to match the JSON structure
 	type Subdomain struct {
