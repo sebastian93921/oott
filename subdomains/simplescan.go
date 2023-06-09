@@ -89,7 +89,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	totalSubdomain := len(subdomainsString)
 	for _, subdomainStr := range subdomainsString {
 		count++
-		fmt.Printf("[+] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
+		fmt.Printf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
 		task := SubdomainTask{
 			SubdomainTarget: subdomainStr,
 			DNSServers:      dnsServers,
