@@ -35,7 +35,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	// }
 
 	// Download the file
-	err = downloadFile(wordlist, wordlistFilePath)
+	err: = downloadFile(wordlist, wordlistFilePath)
 	if err != nil {
 		fmt.Println("[!] Error downloading file:", err)
 		return nil, nil
