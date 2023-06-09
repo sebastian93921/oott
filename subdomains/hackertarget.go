@@ -8,11 +8,11 @@ import (
 )
 
 type Hackertarget struct {
-	// any necessary fields specific to hackertarget
+	// any necessary fields specific
 }
 
-func (s *Hackertarget) ScanSubdomains(domain string) ([]string, error) {
-	fmt.Println("1. Scanning subdomains on hackertarget:", domain)
+func (s *Hackertarget) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
+	fmt.Println("[+] Scanning subdomains on Hackertarget:", domain)
 
 	// Make the API request
 	url := fmt.Sprintf("https://api.hackertarget.com/hostsearch/?q=%s", domain)
@@ -30,6 +30,7 @@ func (s *Hackertarget) ScanSubdomains(domain string) ([]string, error) {
 
 	if !strings.Contains(string(body), domain) {
 		print(string(body))
+		return nil, nil
 	}
 
 	return nil, nil

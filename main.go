@@ -19,8 +19,13 @@ func main() {
 	fmt.Println("Scanning subdomains...")
 
 	subdomainScanner := []subdomains.SubDomainScanner{
-		&subdomains.Hackertarget{},
-		&subdomains.Leakix{},
+		// &subdomains.Hackertarget{},
+		// &subdomains.Leakix{},
+		&subdomains.Alienvault{},
+		// &subdomains.Archiveorg{},
+		// &subdomains.Rapiddns{},
+		// &subdomains.Threatminer{},
+		// &subdomains.Urlscan{},
 		// Add more SubDomainScanner implementations here
 	}
 
@@ -33,7 +38,7 @@ func main() {
 		// Print the subdomains
 		fmt.Printf("\nSubdomains found for %s:\n", *domain)
 		for _, subdomain := range subdomains {
-			fmt.Println(subdomain)
+			fmt.Printf("Domain: %s, Address: %s, Type: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type)
 		}
 	}
 }

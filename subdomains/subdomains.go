@@ -1,5 +1,11 @@
 package subdomains
 
 type SubDomainScanner interface {
-	ScanSubdomains(domain string) ([]string, error)
+	ScanSubdomains(domain string) ([]SubDomainDetails, error)
+}
+
+type SubDomainDetails struct {
+	DomainName string;
+	Address string;
+	Type string;
 }

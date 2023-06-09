@@ -8,11 +8,11 @@ import (
 )
 
 type Leakix struct {
-	// any necessary fields specific to hackertarget
+	// any necessary fields specific
 }
 
-func (s *Leakix) ScanSubdomains(domain string) ([]string, error) {
-	fmt.Println("2. Scanning subdomains on leakix:", domain)
+func (s *Leakix) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
+	fmt.Println("[+] Scanning subdomains on Leakix:", domain)
 
 	// Make the API request
 	url := fmt.Sprintf("https://leakix.net/api/subdomains/%s", domain)
@@ -39,11 +39,13 @@ func (s *Leakix) ScanSubdomains(domain string) ([]string, error) {
 	var subdomains []Subdomain
 	json.Unmarshal(body, &subdomains)
 
-	// Extract the subdomain names
-	var subdomainNames []string
+	var subdomainDetails []SubDomainDetails
 	for _, subdomain := range subdomains {
-		subdomainNames = append(subdomainNames, subdomain.Subdomain)
+		subdomain := SubDomainDetails{
+			DomainName: subdomain.Subdomain,
+		}
+		subdomainDetails = append(subdomainDetails, subdomain)
 	}
 
-	return subdomainNames, nil
+	return subdomainDetails, nil
 }
