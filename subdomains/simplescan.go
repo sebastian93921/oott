@@ -22,9 +22,6 @@ type SubdomainTask struct {
 	Timeout         time.Duration
 }
 
-var cancel = make(chan struct{})
-var cancelled = false
-
 func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	fmt.Println("[+] Scanning subdomains on SimpleScan:", domain)
 
@@ -81,12 +78,15 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
+	// Create a channel to signal cancellation
+	cancel = make(chan struct{})
+
 	// Start a goroutine to listen for the interrupt signal
 	go func() {
 		// Wait for the interrupt signal
 		<-interrupt
 		fmt.Println("\n[!] Ctrl+C pressed. Exiting...")
-		// Signal cancellation to stop the scanner
+		// Signal cancellation to stop the thread
 		close(cancel)
 	}()
 

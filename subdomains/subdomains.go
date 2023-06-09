@@ -14,3 +14,6 @@ type SubDomainDetails struct {
 // List of subdomain prefixes
 var wordlist = "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt"
 var resolversUrl = "https://raw.githubusercontent.com/blechschmidt/massdns/master/lists/resolvers.txt"
+
+// Cancel Sign handling
+var cancel = make(chan struct{})
