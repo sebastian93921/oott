@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"oth/subdomains"
+	"oott/subdomains"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module oth
+module oott
 
 go 1.20
 
