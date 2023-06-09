@@ -26,6 +26,8 @@ func main() {
 		&subdomains.Rapiddns{},
 		// &subdomains.Threatminer{},
 		&subdomains.Urlscan{},
+		// &subdomains.Massdns{}, // Wildcard subdomain issue
+		&subdomains.SimpleScan{},
 		// Add more SubDomainScanner implementations here
 	}
 
