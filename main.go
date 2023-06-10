@@ -9,14 +9,24 @@ import (
 	"oott/subdomains"
 )
 
+type Configuration struct {
+	Help          bool
+	IsFastScan    bool
+	SubdomainScan bool
+	VerboseMode   bool
+}
+
+var config Configuration
+
 func main() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains")
-	subdomainScan := flag.Bool("subdomain-scan", false, "Perform subdomain scanning by target domain")
-	isFastScan := flag.Bool("fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
-	helpFlag := flag.Bool("help", false, "Show help")
+	flag.BoolVar(&config.Help, "help", false, "Show help")
+	flag.BoolVar(&config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain")
+	flag.BoolVar(&config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
+	flag.BoolVar(&config.VerboseMode, "verbose", false, "Enable verbose mode")
 	flag.Parse()
 
-	if *helpFlag {
+	if config.Help {
 		// Print help details
 		fmt.Println("Usage:")
 		fmt.Println("  oott [arugments]")
@@ -33,13 +43,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *subdomainScan {
+	if config.SubdomainScan {
 
 		fmt.Println("[+] Scanning subdomains...")
 
-		if *isFastScan {
-			subdomains.IsFastScan = true
-		}
+		subdomains.IsFastScan = config.IsFastScan
 		subdomainScanResults := []subdomains.SubDomainScanner{
 			&subdomains.Hackertarget{}, // Has max API Limit
 			&subdomains.Leakix{},
