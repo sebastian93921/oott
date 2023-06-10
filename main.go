@@ -4,18 +4,33 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"oott/subdomains"
 )
 
 func main() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains")
-	subdomainScan := flag.Bool("subdomain-scan", false, "Perform subdomain scanning")
-	isFastScan := flag.Bool("fast-scan", false, "Perform fast scanning")
+	subdomainScan := flag.Bool("subdomain-scan", false, "Perform subdomain scanning by target domain")
+	isFastScan := flag.Bool("fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
+	helpFlag := flag.Bool("help", false, "Show help")
 	flag.Parse()
+
+	if *helpFlag {
+		// Print help details
+		fmt.Println("Usage:")
+		fmt.Println("  oott [arugments]")
+		fmt.Println("Flags:")
+		flag.PrintDefaults()
+
+		// Exit the program
+		os.Exit(0)
+	}
 
 	if *domain == "" {
 		log.Fatal("[!] Please provide the '-domain' argument")
+		flag.PrintDefaults()
+		os.Exit(1)
 	}
 
 	if *subdomainScan {
