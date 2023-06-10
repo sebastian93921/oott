@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-func getHttpStatusCode(url string) (string, error) {
+func GetHttpStatusCode(url string) (string, error) {
 	client := http.Client{
 		Timeout: time.Second * 2,
 	}
 
-	resp, err := client.Get("https://" + url)
+	resp, err := client.Get(url)
 	if err != nil {
-		return "ERR", err
+		return "", err
 	}
 
 	return strconv.Itoa(resp.StatusCode), nil

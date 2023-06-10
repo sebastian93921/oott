@@ -4,10 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
-	"time"
 
+	"oott/helper"
 	"oott/subdomains"
 )
 
@@ -96,23 +95,23 @@ func Start() {
 				fmt.Printf("  +- Address: %-40s Type: %-10s Source: %s\n", subdomain.Address, subdomain.Type, subdomain.ModuleName)
 			}
 			if config.HttpStatusCodeTest {
-				client := http.Client{
-					Timeout: time.Second * 2,
-				}
 
-				resp, err := client.Get("https://" + domain)
+				// HTTPS
+				httpsStatusCode, err := helper.GetHttpStatusCode("https://" + domain)
 				if err == nil {
-					fmt.Printf("    +- HTTPS status code: %d\n", resp.StatusCode)
+					fmt.Printf("    +- HTTPS status code: %s\n", httpsStatusCode)
 				} else if config.VerboseMode {
 					fmt.Printf("    +- HTTPS status code: ERR\n")
 				}
 
-				resp, err = client.Get("http://" + domain)
+				// HTTP
+				httpStatusCode, err := helper.GetHttpStatusCode("http://" + domain)
 				if err == nil {
-					fmt.Printf("    +- HTTP status code: %d\n", resp.StatusCode)
+					fmt.Printf("    +- HTTP status code: %s\n", httpStatusCode)
 				} else if config.VerboseMode {
-					fmt.Printf("    +- HTTPS status code: ERR\n")
+					fmt.Printf("    +- HTTP status code: ERR\n")
 				}
+
 			}
 		}
 		fmt.Println("[+] End of subdomains scan")
