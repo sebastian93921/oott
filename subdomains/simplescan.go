@@ -92,7 +92,9 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 			break
 		default:
 			count++
-			fmt.Printf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
+			if VerboseMode {
+				fmt.Printf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
+			}
 			task := SubdomainTask{
 				SubdomainTarget: subdomainStr,
 				DNSServers:      dnsServers,
@@ -108,7 +110,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		<-doneCh
 	}
 
-	fmt.Println("[-] SimpleScan Finished, total subdomains found: ", len(s.ScannedSubdomains))
+	fmt.Println("[+] SimpleScan Finished, total subdomains found: ", len(s.ScannedSubdomains))
 	return s.ScannedSubdomains, nil
 }
 
@@ -150,7 +152,9 @@ func pickRandomDNSServers(dnsServers []string, count int) []string {
 }
 
 func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, dnsServers []string, timeout time.Duration) {
-	fmt.Println("[-] Start on subdomain: ", subdomainTarget)
+	if VerboseMode {
+		fmt.Println("[-] Start on subdomain: ", subdomainTarget)
+	}
 	randomDnsServers := pickRandomDNSServers(dnsServers, 500)
 	count := 0
 	// Perform DNS lookup using different DNS servers

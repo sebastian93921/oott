@@ -12,6 +12,7 @@ func StartEmailScan(configuration Configuration, domain string) {
 	fmt.Println("[+] Scanning emails...")
 
 	emails.IsFastScan = configuration.IsFastScan
+	emails.VerboseMode = configuration.VerboseMode
 	emailScanResults := []emails.EmailScanner{
 		&emails.EmailFormat{},
 		&emails.PGPScan{},

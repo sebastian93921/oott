@@ -92,7 +92,9 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 			defer ticker.Stop()
 
 			for range ticker.C {
-				fmt.Printf("[-] Generating combination of prefix, please wait... %d/%d\n", combinationsGenerated, totalCombinations)
+				if VerboseMode {
+					fmt.Printf("[-] Generating combination of prefix, please wait... %d/%d\n", combinationsGenerated, totalCombinations)
+				}
 				if generateProcessFinished {
 					return
 				}
@@ -276,7 +278,7 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 	var subDomainResult []SubDomainDetails
 	fmt.Println("[+] Starting Root Addresses scan for type", domaintype)
 	rootAddresses := s.runRootScan(resolversFilePath, domaintype)
-	fmt.Println("[-] Root addresses found: ", rootAddresses)
+	fmt.Println("[+] Root addresses found: ", rootAddresses)
 
 	fmt.Println("[+] Starting Subdomain scan for type", domaintype)
 

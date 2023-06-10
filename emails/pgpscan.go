@@ -48,7 +48,9 @@ func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
 
 			// Deduplicate the email addresses using a map
 			for _, match := range matches {
-				fmt.Println("[-] Found email from results:", match)
+				if VerboseMode {
+					fmt.Println("[-] Found email from results:", match)
+				}
 				deduplicated[match] = true
 			}
 

@@ -13,6 +13,7 @@ func StartSubDomainScan(configuration Configuration, domain string) {
 	fmt.Println("[+] Scanning subdomains...")
 
 	subdomains.IsFastScan = configuration.IsFastScan
+	subdomains.VerboseMode = configuration.VerboseMode
 	subdomainScanResults := []subdomains.SubDomainScanner{
 		&subdomains.Hackertarget{}, // Has max API Limit
 		&subdomains.Leakix{},

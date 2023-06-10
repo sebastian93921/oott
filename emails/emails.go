@@ -20,6 +20,7 @@ type EmailDetails struct {
 var cancel = make(chan struct{})
 
 var IsFastScan = false
+var VerboseMode = false
 
 func InterruptHandler() {
 	// Create a channel to receive the interrupt signal
