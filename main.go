@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 	"os"
+	"time"
 
 	"oott/subdomains"
 )
 
 type Configuration struct {
-	Help          bool
-	IsFastScan    bool
-	SubdomainScan bool
-	VerboseMode   bool
-  HttpStatusCodeTest bool
+	Help               bool
+	IsFastScan         bool
+	SubdomainScan      bool
+	VerboseMode        bool
+	HttpStatusCodeTest bool
 }
 
 var config Configuration
@@ -26,9 +26,9 @@ func main() {
 	flag.BoolVar(&config.Help, "help", false, "Show help")
 	flag.BoolVar(&config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain")
 	flag.BoolVar(&config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
-  flag.BoolVar(&config.HttpStatusCodeTest"http-status-code", false, "Get HTTP status code for each subdomain found")
-  
-  flag.BoolVar(&config.VerboseMode, "verbose", false, "Enable verbose mode")
+	flag.BoolVar(&config.HttpStatusCodeTest, "http-status-code", false, "Get HTTP status code for each subdomain found")
+
+	flag.BoolVar(&config.VerboseMode, "verbose", false, "Enable verbose mode")
 	flag.Parse()
 
 	if config.Help {
@@ -84,8 +84,8 @@ func main() {
 		}
 
 		for _, subdomain := range subdomainLists {
-			if *httpStatusCodeTest {
-				client := http.Client {
+			if config.HttpStatusCodeTest {
+				client := http.Client{
 					Timeout: time.Second * 2,
 				}
 
