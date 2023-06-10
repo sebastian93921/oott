@@ -14,6 +14,7 @@ func StartEmailScan(configuration Configuration, domain string) {
 	emails.IsFastScan = configuration.IsFastScan
 	emailScanResults := []emails.EmailScanner{
 		&emails.EmailFormat{},
+		&emails.PGPScan{},
 		// Add more EmailScanner implementations here
 	}
 
