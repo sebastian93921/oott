@@ -8,9 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -172,21 +170,7 @@ func isMassDNSInstalled() bool {
 }
 
 func (s *Massdns) runMassDNS(resolversFilePath string, subdomains []string) error {
-	// Create a channel to receive the interrupt signal
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
-
-	// Create a channel to signal cancellation
-	cancel = make(chan struct{})
-
-	// Start a goroutine to listen for the interrupt signal
-	go func() {
-		// Wait for the interrupt signal
-		<-interrupt
-		fmt.Println("\n[!] Ctrl+C pressed. Exiting...")
-		// Signal cancellation to stop the scanner
-		close(cancel)
-	}()
+	InterruptHandler()
 
 	fmt.Println("[+] Size of subdomains generated: ", len(subdomains), " . Start running, please wait..")
 	fmt.Println("[+] Press Ctrl+C to cancel this operation if it doesn't produce any results for an extended period of time.")

@@ -7,8 +7,6 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -70,21 +68,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, nil
 	}
 
-	// Create a channel to receive the interrupt signal
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
-
-	// Create a channel to signal cancellation
-	cancel = make(chan struct{})
-
-	// Start a goroutine to listen for the interrupt signal
-	go func() {
-		// Wait for the interrupt signal
-		<-interrupt
-		fmt.Println("\n[!] Ctrl+C pressed. Exiting...")
-		// Signal cancellation to stop the thread
-		close(cancel)
-	}()
+	InterruptHandler()
 
 	// Create workers
 	taskCh := make(chan SubdomainTask)
