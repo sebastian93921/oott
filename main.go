@@ -6,24 +6,53 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"os"
 
 	"oott/subdomains"
 )
 
+type Configuration struct {
+	Help          bool
+	IsFastScan    bool
+	SubdomainScan bool
+	VerboseMode   bool
+  HttpStatusCodeTest bool
+}
+
+var config Configuration
+
 func main() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains")
-	subdomainScan := flag.Bool("subdomain-scan", false, "Perform subdomain scanning")
-	httpStatusCodeTest := flag.Bool("http-status-code", false, "Get HTTP status code for each subdomain found")
+	flag.BoolVar(&config.Help, "help", false, "Show help")
+	flag.BoolVar(&config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain")
+	flag.BoolVar(&config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
+  flag.BoolVar(&config.HttpStatusCodeTest"http-status-code", false, "Get HTTP status code for each subdomain found")
+  
+  flag.BoolVar(&config.VerboseMode, "verbose", false, "Enable verbose mode")
 	flag.Parse()
+
+	if config.Help {
+		// Print help details
+		fmt.Println("Usage:")
+		fmt.Println("  oott [arugments]")
+		fmt.Println("Flags:")
+		flag.PrintDefaults()
+
+		// Exit the program
+		os.Exit(0)
+	}
 
 	if *domain == "" {
 		log.Fatal("[!] Please provide the '-domain' argument")
+		flag.PrintDefaults()
+		os.Exit(1)
 	}
 
-	if *subdomainScan {
+	if config.SubdomainScan {
 
 		fmt.Println("[+] Scanning subdomains...")
 
+		subdomains.IsFastScan = config.IsFastScan
 		subdomainScanResults := []subdomains.SubDomainScanner{
 			&subdomains.Hackertarget{}, // Has max API Limit
 			&subdomains.Leakix{},
@@ -70,6 +99,7 @@ func main() {
 				fmt.Printf("Domain: %-40s Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
 			}
 		}
+		fmt.Println("[+] End of subdomains scan")
 	}
 }
 
