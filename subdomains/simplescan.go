@@ -178,6 +178,7 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 
 			addresses, err := resolver.LookupHost(ctx, subdomainTarget)
 			if err != nil {
+				/* DEBUG Only - Too many outputs
 				if VerboseMode {
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						// DNS lookup timed out
@@ -187,6 +188,7 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 						fmt.Printf("[-] Subdomain '%s' does not exist or encountered an error on DNS server %s: %v\n", subdomainTarget, dnsServer, err)
 					}
 				}
+				*/
 				continue
 			}
 
