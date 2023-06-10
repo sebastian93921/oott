@@ -54,7 +54,7 @@ func (s *Archiveorg) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	for _, domainSubdomain := range distinctList {
 		subdomain := SubDomainDetails{
 			DomainName: domainSubdomain,
-			ModuleName: "Archiveorg",
+			Source:     "Archiveorg",
 		}
 		subdomains = append(subdomains, subdomain)
 	}

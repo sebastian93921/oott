@@ -366,7 +366,7 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 						DomainName: strings.TrimSuffix(name, "."),
 						Address:    address,
 						Type:       typeVal,
-						ModuleName: "Massdns",
+						Source:     "Massdns",
 					}
 					subDomainResult = append(subDomainResult, subdomain)
 				}

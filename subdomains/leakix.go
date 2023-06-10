@@ -47,7 +47,7 @@ func (s *Leakix) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	for _, subdomain := range subdomains {
 		subdomain := SubDomainDetails{
 			DomainName: subdomain.Subdomain,
-			ModuleName: "Leakix",
+			Source:     "Leakix",
 		}
 		subdomainDetails = append(subdomainDetails, subdomain)
 	}

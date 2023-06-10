@@ -45,7 +45,7 @@ func (s *Hackertarget) ScanSubdomains(domain string) ([]SubDomainDetails, error)
 			subdomain := SubDomainDetails{
 				DomainName: domain,
 				Address:    ip,
-				ModuleName: "Hackertarget",
+				Source:     "Hackertarget",
 			}
 
 			subdomains = append(subdomains, subdomain)

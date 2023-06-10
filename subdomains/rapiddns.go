@@ -48,9 +48,9 @@ func (s *Rapiddns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 		subdomain := SubDomainDetails{
 			DomainName: domain,
-			Address: address,
-			Type: domaintype,
-			ModuleName: "Rapiddns",
+			Address:    address,
+			Type:       domaintype,
+			Source:     "Rapiddns",
 		}
 
 		subdomains = append(subdomains, subdomain)

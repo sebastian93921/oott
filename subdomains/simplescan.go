@@ -191,7 +191,7 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 			subdomain := SubDomainDetails{
 				DomainName: subdomainTarget,
 				Address:    addresses[0],
-				ModuleName: "SimpleScan",
+				Source:     "SimpleScan",
 			}
 			s.ScannedSubdomains = append(s.ScannedSubdomains, subdomain)
 			break

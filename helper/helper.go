@@ -22,7 +22,7 @@ func GetHttpStatusCode(url string) (string, error) {
 	return strconv.Itoa(resp.StatusCode), nil
 }
 
-func OutputCsv(data [][]string) error {
+func OutputCsv(data [][]string) (string, error) {
 	filename := "/tmp/oott_subdomain-scan_" + getUnixTimestamp() + ".csv"
 
 	file, err := os.Create(filename)
@@ -36,13 +36,13 @@ func OutputCsv(data [][]string) error {
 	for _, row := range data {
 		err := writer.Write(row)
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
 	writer.Flush()
 
-	return nil
+	return filename, nil
 }
 
 func getUnixTimestamp() string {
