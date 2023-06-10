@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"oott/subdomains"
@@ -66,6 +67,18 @@ func Start() {
 			// Add more SubDomainScanner implementations here
 		}
 
+		fmt.Println("[+] Below is the list of modules that will be used for subdomain scanning against domain [", *domain, "]")
+		fmt.Println("[+] Fast Scan enabled [", config.IsFastScan, "]")
+		fmt.Println("========================================================================================>")
+		for _, sf := range subdomainScanResults {
+			structName := fmt.Sprintf("%T", sf)
+			parts := strings.Split(structName, ".")
+			fmt.Println(parts[len(parts)-1])
+		}
+		fmt.Println("<========================================================================================")
+		fmt.Println("If you agree the uses of modules, press Enter to continue...")
+		fmt.Scanln()
+
 		var subdomainLists []subdomains.SubDomainDetails
 		for _, sf := range subdomainScanResults {
 			subdomains, err := sf.ScanSubdomains(*domain)
@@ -90,6 +103,7 @@ func Start() {
 			groupedResults[domain] = append(groupedResults[domain], result)
 		}
 
+		fmt.Println("========================================================================================>")
 		for domain, results := range groupedResults {
 			fmt.Println("Domain:", domain)
 			for _, subdomain := range results {
@@ -115,6 +129,7 @@ func Start() {
 				}
 			}
 		}
+		fmt.Println("<========================================================================================")
 		fmt.Println("[+] End of subdomains scan")
 	}
 }
