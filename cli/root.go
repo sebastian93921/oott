@@ -101,16 +101,12 @@ func Start() {
 				}
 
 				resp, err := client.Get("https://" + domain)
-				if err != nil {
-					fmt.Printf("    +- HTTPS status code: ERR\n")
-				} else {
+				if err == nil {
 					fmt.Printf("    +- HTTPS status code: %d\n", resp.StatusCode)
 				}
 
 				resp, err = client.Get("http://" + domain)
-				if err != nil {
-					fmt.Printf("    +- HTTP status code: ERR\n")
-				} else {
+				if err == nil {
 					fmt.Printf("    +- HTTP status code: %d\n", resp.StatusCode)
 				}
 			}
