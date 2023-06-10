@@ -103,11 +103,15 @@ func Start() {
 				resp, err := client.Get("https://" + domain)
 				if err == nil {
 					fmt.Printf("    +- HTTPS status code: %d\n", resp.StatusCode)
+				} else if config.VerboseMode {
+					fmt.Printf("    +- HTTPS status code: ERR\n")
 				}
 
 				resp, err = client.Get("http://" + domain)
 				if err == nil {
 					fmt.Printf("    +- HTTP status code: %d\n", resp.StatusCode)
+				} else if config.VerboseMode {
+					fmt.Printf("    +- HTTPS status code: ERR\n")
 				}
 			}
 		}
