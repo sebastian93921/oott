@@ -3,9 +3,12 @@ package cli
 import (
 	"fmt"
 	"log"
-	"oott/helper"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
+	"oott/helper"
 	"oott/subdomains"
 )
 
@@ -63,29 +66,35 @@ func StartSubDomainScan(configuration Configuration, domain string) {
 	}
 
 	fmt.Println("========================================================================================>")
+	interruptHandler()
 	for domain, results := range groupedResults {
 		fmt.Println("Domain:", domain)
 		for _, subdomain := range results {
 			fmt.Printf("  +- Address: %-40s Type: %-10s Source: %s\n", subdomain.Address, subdomain.Type, subdomain.ModuleName)
 		}
 		if configuration.HttpStatusCodeTest {
+			select {
+			case <-cancel:
+				// Scanner canceled, exit the loop
+				fmt.Println("[+] Cancel sign received, Stop Status Code Test..")
+				break
+			default:
+				// HTTPS
+				httpsStatusCode, err := helper.GetHttpStatusCode("https://" + domain)
+				if err == nil {
+					fmt.Printf("    +- HTTPS status code: %s\n", httpsStatusCode)
+				} else if configuration.VerboseMode {
+					fmt.Printf("    +- HTTPS status code: ERR\n")
+				}
 
-			// HTTPS
-			httpsStatusCode, err := helper.GetHttpStatusCode("https://" + domain)
-			if err == nil {
-				fmt.Printf("    +- HTTPS status code: %s\n", httpsStatusCode)
-			} else if configuration.VerboseMode {
-				fmt.Printf("    +- HTTPS status code: ERR\n")
+				// HTTP
+				httpStatusCode, err := helper.GetHttpStatusCode("http://" + domain)
+				if err == nil {
+					fmt.Printf("    +- HTTP status code: %s\n", httpStatusCode)
+				} else if configuration.VerboseMode {
+					fmt.Printf("    +- HTTP status code: ERR\n")
+				}
 			}
-
-			// HTTP
-			httpStatusCode, err := helper.GetHttpStatusCode("http://" + domain)
-			if err == nil {
-				fmt.Printf("    +- HTTP status code: %s\n", httpStatusCode)
-			} else if configuration.VerboseMode {
-				fmt.Printf("    +- HTTP status code: ERR\n")
-			}
-
 		}
 	}
 	fmt.Println("<========================================================================================")
@@ -118,4 +127,22 @@ func aggregateSubDomainDetails(subDomains []subdomains.SubDomainDetails) []subdo
 	}
 
 	return result
+}
+
+func interruptHandler() {
+	// Create a channel to receive the interrupt signal
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+
+	// Create a channel to signal cancellation
+	cancel = make(chan struct{})
+
+	// Start a goroutine to listen for the interrupt signal
+	go func() {
+		// Wait for the interrupt signal
+		<-interrupt
+		fmt.Println("\n[!] Ctrl+C pressed. Exiting...")
+		// Signal cancellation to stop the scanner
+		close(cancel)
+	}()
 }

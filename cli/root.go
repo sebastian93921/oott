@@ -17,6 +17,8 @@ type Configuration struct {
 
 var config Configuration
 
+var cancel = make(chan struct{})
+
 func Start() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains")
 	flag.BoolVar(&config.Help, "help", false, "Show help")
