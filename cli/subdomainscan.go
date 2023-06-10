@@ -67,11 +67,18 @@ func StartSubDomainScan(configuration Configuration, domain string) {
 
 	fmt.Println("========================================================================================>")
 	interruptHandler()
+
+	csvData := [][]string{
+		{"Domain", "Address", "Type", "Source"},
+	}
+
 	for domain, results := range groupedResults {
 		fmt.Println("Domain:", domain)
 		for _, subdomain := range results {
 			fmt.Printf("  +- Address: %-40s Type: %-10s Source: %s\n", subdomain.Address, subdomain.Type, subdomain.ModuleName)
+			csvData = append(csvData, []string{domain, subdomain.Address, subdomain.Type, subdomain.ModuleName})
 		}
+
 		if configuration.HttpStatusCodeTest {
 			select {
 			case <-cancel:
@@ -99,6 +106,9 @@ func StartSubDomainScan(configuration Configuration, domain string) {
 	}
 	fmt.Println("<========================================================================================")
 	fmt.Println("[+] End of subdomains scan")
+
+	helper.OutputCsv(csvData)
+	fmt.Println("[+] Please find CSV file in /tmp")
 }
 
 func aggregateSubDomainDetails(subDomains []subdomains.SubDomainDetails) []subdomains.SubDomainDetails {
