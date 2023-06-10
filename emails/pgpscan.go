@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -59,11 +60,13 @@ func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
 	var emailDetails []EmailDetails
 	// Deduplicated email addresses
 	for email := range deduplicated {
-		emailDetail := EmailDetails{
-			Email:  email,
-			Source: "PGPScan",
+		if strings.Contains(email, "@"+domain) {
+			emailDetail := EmailDetails{
+				Email:  email,
+				Source: "PGPScan",
+			}
+			emailDetails = append(emailDetails, emailDetail)
 		}
-		emailDetails = append(emailDetails, emailDetail)
 	}
 
 	return emailDetails, nil
