@@ -44,7 +44,7 @@ func StartSubDomainScan(configuration Configuration, domain string) {
 		subdomains, err := sf.ScanSubdomains(domain)
 		if err != nil {
 			fmt.Println("Unexpected Error Occur:", err)
-			os.Exit(1)
+			continue
 		}
 
 		for _, subdomain := range subdomains {
