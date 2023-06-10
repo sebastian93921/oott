@@ -3,7 +3,6 @@ package emails
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -29,7 +28,8 @@ func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
 		}
 		response, err := client.Get(url)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("[!] Error on querying server:", err)
+			continue
 		}
 
 		if response.StatusCode == http.StatusOK {
@@ -39,7 +39,8 @@ func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
 
 			data, err := io.ReadAll(content)
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println("[!] Error on querying server:", err)
+				continue
 			}
 
 			regex := `(?i)[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+`
@@ -55,7 +56,7 @@ func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
 			}
 
 		} else {
-			log.Printf("Request failed with status code: %d\n", response.StatusCode)
+			fmt.Printf("Request failed with status code: %d\n", response.StatusCode)
 		}
 	}
 

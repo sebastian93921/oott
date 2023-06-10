@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"strings"
 
 	"oott/helper"
@@ -43,7 +43,8 @@ func StartSubDomainScan(configuration Configuration, domain string) {
 	for _, sf := range subdomainScanResults {
 		subdomains, err := sf.ScanSubdomains(domain)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("Unexpected Error Occur:", err)
+			os.Exit(1)
 		}
 
 		for _, subdomain := range subdomains {

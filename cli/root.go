@@ -3,7 +3,6 @@ package cli
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -45,7 +44,7 @@ func Start() {
 	}
 
 	if *domain == "" {
-		log.Fatal("[!] Please provide the '-domain' argument")
+		fmt.Println("[!] Please provide the '-domain' argument")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}

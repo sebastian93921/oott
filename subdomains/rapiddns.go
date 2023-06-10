@@ -3,7 +3,6 @@ package subdomains
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
@@ -33,7 +32,7 @@ func (s *Rapiddns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
 	if err != nil {
-		log.Fatal("Error parsing HTML:", err)
+		fmt.Println("[!] Error parsing HTML:", err)
 		return nil, nil
 	}
 

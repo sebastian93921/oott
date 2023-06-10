@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"strings"
 
 	"oott/emails"
@@ -36,7 +36,8 @@ func StartEmailScan(configuration Configuration, domain string) {
 	for _, sf := range emailScanResults {
 		results, err := sf.ScanEmails(domain)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("Unexpected Error Occur:", err)
+			os.Exit(1)
 		}
 
 		for _, result := range results {

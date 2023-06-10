@@ -2,7 +2,7 @@ package helper
 
 import (
 	"encoding/csv"
-	"log"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -27,7 +27,8 @@ func OutputCsv(data [][]string) (string, error) {
 
 	file, err := os.Create(filename)
 	if err != nil {
-		log.Println("Something wrong when creating CSV file in /tmp")
+		fmt.Println("[!] Something wrong when creating CSV file in /tmp")
+		return "", err
 	}
 	defer file.Close()
 
