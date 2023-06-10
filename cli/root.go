@@ -27,7 +27,7 @@ func Start() {
 	flag.BoolVar(&config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain")
 	flag.BoolVar(&config.EmailScan, "email-scan", false, "Perform email scanning by target domain")
 	flag.BoolVar(&config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
-	flag.BoolVar(&config.HttpStatusCodeTest, "http-status-code", false, "Get HTTP status code for each subdomain found")
+	flag.BoolVar(&config.HttpStatusCodeTest, "http-status-scan", false, "Get HTTP status code for each subdomain found")
 
 	flag.BoolVar(&config.VerboseMode, "verbose", false, "Enable verbose mode")
 	flag.Parse()
