@@ -19,4 +19,4 @@ var resolversUrl = "https://public-dns.info/nameservers.txt"
 // Cancel Sign handling
 var cancel = make(chan struct{})
 
-var isFastScan = true
+var IsFastScan = false

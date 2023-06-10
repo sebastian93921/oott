@@ -11,6 +11,7 @@ import (
 func main() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains")
 	subdomainScan := flag.Bool("subdomain-scan", false, "Perform subdomain scanning")
+	isFastScan := flag.Bool("fast-scan", false, "Perform fast scanning")
 	flag.Parse()
 
 	if *domain == "" {
@@ -21,6 +22,9 @@ func main() {
 
 		fmt.Println("[+] Scanning subdomains...")
 
+		if *isFastScan {
+			subdomains.IsFastScan = true
+		}
 		subdomainScanResults := []subdomains.SubDomainScanner{
 			&subdomains.Hackertarget{}, // Has max API Limit
 			&subdomains.Leakix{},
@@ -54,6 +58,7 @@ func main() {
 		for _, subdomain := range subdomainLists {
 			fmt.Printf("Domain: %-40s Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
 		}
+		fmt.Println("[+] End of subdomains scan")
 	}
 }
 

@@ -42,7 +42,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, nil
 	}
 
-	if isFastScan {
+	if IsFastScan {
 		err = downloadFile(wordlist_long, wordlistFilePath)
 	} else {
 		err = downloadFile(wordlist, wordlistFilePath)
@@ -73,7 +73,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	var subdomainsString []string
 
-	if isFastScan {
+	if IsFastScan {
 		// Iterate over the subdomain prefixes
 		for _, prefix := range subdomainPrefixes {
 			subdomain := fmt.Sprintf("%s.%s", prefix, domain)
@@ -417,9 +417,16 @@ func (s *Massdns) isFalsePositive(rootAddresses []string, address string) bool {
 		}
 	}
 	s.FalsePositiveHost[address] = s.FalsePositiveHost[address] + 1
-	// If the address occurs more then 4 times but it's not from our root addresses, it is possible a false possitve
-	if s.FalsePositiveHost[address] > 4 {
-		return true
+	if IsFastScan {
+		// If the address occurs more then 4 times but it's not from our root addresses, it is possible a false possitve
+		if s.FalsePositiveHost[address] > 4 {
+			return true
+		}
+	} else {
+		// If the address occurs more then 10 times but it's not from our root addresses, it is possible a false possitve
+		if s.FalsePositiveHost[address] > 10 {
+			return true
+		}
 	}
 	return false
 }
