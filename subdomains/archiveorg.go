@@ -49,7 +49,9 @@ func (s *Archiveorg) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		distinctList = append(distinctList, domainSubdomain)
 	}
 
-	fmt.Println("[-] Distinct Domain and Subdomain Names")
+	if VerboseMode {
+		fmt.Println("[-] Distinct Domain and Subdomain Names")
+	}
 	var subdomains []SubDomainDetails
 	for _, domainSubdomain := range distinctList {
 		subdomain := SubDomainDetails{
