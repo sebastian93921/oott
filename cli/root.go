@@ -83,20 +83,36 @@ func Start() {
 
 		}
 
-		for _, subdomain := range subdomainLists {
+		// Group the results by domain
+		groupedResults := make(map[string][]subdomains.SubDomainDetails)
+		for _, result := range subdomainLists {
+			domain := result.DomainName
+			groupedResults[domain] = append(groupedResults[domain], result)
+		}
+
+		for domain, results := range groupedResults {
+			fmt.Println("Domain:", domain)
+			for _, subdomain := range results {
+				fmt.Printf("  +- Address: %-40s Type: %-10s Source: %s\n", subdomain.Address, subdomain.Type, subdomain.ModuleName)
+			}
 			if config.HttpStatusCodeTest {
 				client := http.Client{
 					Timeout: time.Second * 2,
 				}
 
-				resp, err := client.Get("https://" + subdomain.DomainName)
+				resp, err := client.Get("https://" + domain)
 				if err != nil {
-					fmt.Printf("Domain: %-40s HTTP status code: ERR        Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
+					fmt.Printf("    +- HTTPS status code: ERR\n")
 				} else {
-					fmt.Printf("Domain: %-40s HTTP status code: %-10d Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, resp.StatusCode, subdomain.Address, subdomain.Type, subdomain.ModuleName)
+					fmt.Printf("    +- HTTPS status code: %d\n", resp.StatusCode)
 				}
-			} else {
-				fmt.Printf("Domain: %-40s Address: %-40s Type: %-10s Found Module: %s\n", subdomain.DomainName, subdomain.Address, subdomain.Type, subdomain.ModuleName)
+
+				resp, err = client.Get("http://" + domain)
+				if err != nil {
+					fmt.Printf("    +- HTTP status code: ERR\n")
+				} else {
+					fmt.Printf("    +- HTTP status code: %d\n", resp.StatusCode)
+				}
 			}
 		}
 		fmt.Println("[+] End of subdomains scan")
