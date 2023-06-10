@@ -8,7 +8,7 @@ import (
 	"oott/subdomains"
 )
 
-func StartSubDomainScan(configuration Configuration, domain string) {
+func StartSubDomainScan(configuration Configuration, domain string) []subdomains.SubDomainDetails {
 	fmt.Println("[+] Scanning subdomains...")
 
 	subdomains.IsFastScan = configuration.IsFastScan
@@ -109,6 +109,8 @@ func StartSubDomainScan(configuration Configuration, domain string) {
 	if err == nil {
 		fmt.Println("[+] Please find CSV file in", filename)
 	}
+
+	return subdomainLists
 }
 
 func aggregateSubDomainDetails(subDomains []subdomains.SubDomainDetails) []subdomains.SubDomainDetails {

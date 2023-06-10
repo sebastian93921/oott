@@ -7,7 +7,7 @@ import (
 	"oott/emails"
 )
 
-func StartEmailScan(configuration Configuration, domain string) {
+func StartEmailScan(configuration Configuration, domain string) []emails.EmailDetails {
 	fmt.Println("[+] Scanning emails...")
 
 	emails.IsFastScan = configuration.IsFastScan
@@ -68,4 +68,6 @@ func StartEmailScan(configuration Configuration, domain string) {
 	fmt.Println("<========================================================================================")
 
 	fmt.Println("[+] End of email scan")
+
+	return emailLists
 }

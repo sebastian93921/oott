@@ -50,11 +50,13 @@ func Start() {
 	}
 
 	if config.SubdomainScan {
-		StartSubDomainScan(config, *domain)
+		// Return subdomain list
+		_ = StartSubDomainScan(config, *domain)
 	}
 
 	if config.EmailScan {
-		StartEmailScan(config, *domain)
+		// Return email list
+		_ = StartEmailScan(config, *domain)
 	}
 }
 
