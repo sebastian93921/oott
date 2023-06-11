@@ -194,7 +194,7 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 			}
 
 			// Subdomain exists, print the IP addresses
-			helper.InfoPrintln("[SimpleScan] Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
+			helper.InfoPrintf("[SimpleScan] Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
 
 			//If exists, save it and break the loop
 			subdomain := SubDomainDetails{
