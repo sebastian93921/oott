@@ -107,7 +107,7 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 
 	filename, err := helper.OutputCsv(csvData)
 	if err == nil {
-		helper.InfoPrintln("[+] Please find CSV file in", filename)
+		helper.ResultPrintln("[+] Please find CSV file in", filename)
 	}
 
 	return subdomainLists
