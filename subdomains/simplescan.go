@@ -22,6 +22,9 @@ type SubdomainTask struct {
 }
 
 func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
+	CreateInterruptHandler()
+	defer HousekeepInterruptHandler()
+
 	helper.InfoPrintln("[+] Scanning subdomains on SimpleScan:", domain)
 
 	wordlistFilePath := tmpfolder + "/subdomains-prefix.txt"
@@ -68,8 +71,6 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	if dnsServers == nil {
 		return nil, nil
 	}
-
-	InterruptHandler()
 
 	// Create workers
 	taskCh := make(chan SubdomainTask)

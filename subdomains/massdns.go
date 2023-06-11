@@ -23,6 +23,9 @@ var massdnsCommand = "massdns"
 var tmpfolder = "/tmp"
 
 func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
+	CreateInterruptHandler()
+	defer HousekeepInterruptHandler()
+
 	helper.InfoPrintln("[+] Scanning subdomains on Massdns:", domain)
 	s.TargetDomain = domain
 
@@ -173,8 +176,6 @@ func isMassDNSInstalled() bool {
 }
 
 func (s *Massdns) runMassDNS(resolversFilePath string, subdomains []string) error {
-	InterruptHandler()
-
 	helper.InfoPrintln("[+] Size of subdomains generated: ", len(subdomains), " . Start running, please wait..")
 	helper.InfoPrintln("[+] Press Ctrl+C to cancel this operation if it doesn't produce any results for an extended period of time.")
 	err := s.runMassDNSByType(resolversFilePath, subdomains, "A")

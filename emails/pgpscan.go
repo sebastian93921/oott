@@ -56,7 +56,7 @@ func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
 			}
 
 		} else {
-			helper.ErrorPrintln("[!] Request failed with status code: %d\n", response.StatusCode)
+			helper.ErrorPrintf("[!] Request failed on URL [%s] with status code: %d\n", url, response.StatusCode)
 		}
 	}
 

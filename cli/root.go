@@ -58,7 +58,7 @@ func Start() {
 	}
 }
 
-func interruptHandler() {
+func CreateInterruptHandler() {
 	// Create a channel to receive the interrupt signal
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
@@ -70,8 +70,22 @@ func interruptHandler() {
 	go func() {
 		// Wait for the interrupt signal
 		<-interrupt
-		helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
+		if config.VerboseMode {
+			helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
+		}
 		// Signal cancellation to stop the scanner
 		close(cancel)
 	}()
+
+}
+
+func HousekeepInterruptHandler() {
+	select {
+	case _, ok := <-cancel:
+		if !ok {
+			return
+		}
+	default:
+		close(cancel)
+	}
 }
