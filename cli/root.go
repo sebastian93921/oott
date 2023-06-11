@@ -58,6 +58,7 @@ func Start() {
 	}
 }
 
+// Use `defer HousekeepInterruptHandler()` for housekeeping the signal
 func CreateInterruptHandler() {
 	// Create a channel to receive the interrupt signal
 	interrupt := make(chan os.Signal, 1)
