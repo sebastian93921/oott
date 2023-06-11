@@ -94,7 +94,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		default:
 			count++
 			if VerboseMode {
-				helper.VerbosePrintln("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
+				helper.VerbosePrintf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
 			}
 			task := SubdomainTask{
 				SubdomainTarget: subdomainStr,
@@ -183,10 +183,10 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 				if VerboseMode {
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						// DNS lookup timed out
-						helper.VerbosePrintln("[-] DNS lookup timed out for subdomain '%s' on DNS server %s\n", subdomainTarget, dnsServer)
+						helper.VerbosePrintf("[-] DNS lookup timed out for subdomain '%s' on DNS server %s\n", subdomainTarget, dnsServer)
 					} else {
 						// Subdomain doesn't exist or encountered another error
-						helper.VerbosePrintln("[-] Subdomain '%s' does not exist or encountered an error on DNS server %s: %v\n", subdomainTarget, dnsServer, err)
+						helper.VerbosePrintf("[-] Subdomain '%s' does not exist or encountered an error on DNS server %s: %v\n", subdomainTarget, dnsServer, err)
 					}
 				}
 				*/
