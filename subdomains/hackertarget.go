@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"oott/helper"
 	"strings"
 )
 
@@ -12,7 +13,7 @@ type Hackertarget struct {
 }
 
 func (s *Hackertarget) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	fmt.Println("[+] Scanning subdomains on Hackertarget:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on Hackertarget:", domain)
 
 	// Make the API request
 	url := fmt.Sprintf("https://api.hackertarget.com/hostsearch/?q=%s", domain)
@@ -29,7 +30,7 @@ func (s *Hackertarget) ScanSubdomains(domain string) ([]SubDomainDetails, error)
 	}
 
 	if !strings.Contains(string(body), domain) {
-		fmt.Println(string(body))
+		helper.ErrorPrintln(string(body))
 		return nil, nil
 	}
 

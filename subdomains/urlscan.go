@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"oott/helper"
 	"strings"
 )
 
@@ -66,7 +67,7 @@ type Urlscan struct {
 }
 
 func (s *Urlscan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	fmt.Println("[+] Scanning subdomains on Urlscan:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on Urlscan:", domain)
 
 	// Make the API request
 	url := fmt.Sprintf("https://urlscan.io/api/v1/search/?q=%s", domain)

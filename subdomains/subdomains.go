@@ -1,10 +1,11 @@
 package subdomains
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"oott/helper"
 )
 
 type SubDomainScanner interface {
@@ -41,7 +42,7 @@ func InterruptHandler() {
 	go func() {
 		// Wait for the interrupt signal
 		<-interrupt
-		fmt.Println("\n[!] Ctrl+C pressed. Exiting...")
+		helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
 		// Signal cancellation to stop the scanner
 		close(cancel)
 	}()

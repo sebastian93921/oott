@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"oott/helper"
 	"os"
 	"time"
 )
@@ -21,7 +22,7 @@ type SubdomainTask struct {
 }
 
 func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	fmt.Println("[+] Scanning subdomains on SimpleScan:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on SimpleScan:", domain)
 
 	wordlistFilePath := tmpfolder + "/subdomains-prefix.txt"
 	timeout := 200 * time.Millisecond // Adjust timeout duration as needed
@@ -34,11 +35,11 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	// Download the file
 	err := downloadFile(wordlist, wordlistFilePath)
 	if err != nil {
-		fmt.Println("[!] Error downloading file:", err)
+		helper.ErrorPrintln("[!] Error downloading file:", err)
 		return nil, nil
 	}
 
-	fmt.Println("[+] Files downloaded successfully.")
+	helper.InfoPrintln("[+] Files downloaded successfully.")
 
 	subdomainPrefixes := readFileLinebyLine(wordlistFilePath)
 	if subdomainPrefixes == nil {
@@ -50,7 +51,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		subdomain := fmt.Sprintf("%s.%s", prefix, domain)
 		subdomainsString = append(subdomainsString, subdomain)
 	}
-	fmt.Println("[+] Load wordlist successfully.")
+	helper.InfoPrintln("[+] Load wordlist successfully.")
 
 	dnsServers := []string{
 		"8.8.8.8",        // Google Public DNS
@@ -93,7 +94,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		default:
 			count++
 			if VerboseMode {
-				fmt.Printf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
+				helper.VerbosePrintln("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
 			}
 			task := SubdomainTask{
 				SubdomainTarget: subdomainStr,
@@ -110,7 +111,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		<-doneCh
 	}
 
-	fmt.Println("[+] SimpleScan Finished, total subdomains found: ", len(s.ScannedSubdomains))
+	helper.InfoPrintln("[+] SimpleScan Finished, total subdomains found: ", len(s.ScannedSubdomains))
 	return s.ScannedSubdomains, nil
 }
 
@@ -118,7 +119,7 @@ func readFileLinebyLine(wordlistFilePath string) []string {
 	// Open the file for reading
 	file, err := os.Open(wordlistFilePath)
 	if err != nil {
-		fmt.Printf("[!] Failed to open file: %v\n", err)
+		helper.ErrorPrintf("[!] Failed to open file: %v\n", err)
 		return nil
 	}
 	defer file.Close()
@@ -153,7 +154,7 @@ func pickRandomDNSServers(dnsServers []string, count int) []string {
 
 func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, dnsServers []string, timeout time.Duration) {
 	if VerboseMode {
-		fmt.Println("[-] Start on subdomain: ", subdomainTarget)
+		helper.VerbosePrintln("[-] Start on subdomain: ", subdomainTarget)
 	}
 	randomDnsServers := pickRandomDNSServers(dnsServers, 500)
 	count := 0
@@ -182,10 +183,10 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 				if VerboseMode {
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						// DNS lookup timed out
-						fmt.Printf("[-] DNS lookup timed out for subdomain '%s' on DNS server %s\n", subdomainTarget, dnsServer)
+						helper.VerbosePrintln("[-] DNS lookup timed out for subdomain '%s' on DNS server %s\n", subdomainTarget, dnsServer)
 					} else {
 						// Subdomain doesn't exist or encountered another error
-						fmt.Printf("[-] Subdomain '%s' does not exist or encountered an error on DNS server %s: %v\n", subdomainTarget, dnsServer, err)
+						helper.VerbosePrintln("[-] Subdomain '%s' does not exist or encountered an error on DNS server %s: %v\n", subdomainTarget, dnsServer, err)
 					}
 				}
 				*/
@@ -193,7 +194,7 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 			}
 
 			// Subdomain exists, print the IP addresses
-			fmt.Printf("[SimpleScan] Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
+			helper.InfoPrintln("[SimpleScan] Subdomain '%s' exists on DNS server %s. IP Address: %s\n", subdomainTarget, dnsServer, addresses[0])
 
 			//If exists, save it and break the loop
 			subdomain := SubDomainDetails{

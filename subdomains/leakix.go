@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"oott/helper"
 	"strings"
 )
 
@@ -13,7 +14,7 @@ type Leakix struct {
 }
 
 func (s *Leakix) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	fmt.Println("[+] Scanning subdomains on Leakix:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on Leakix:", domain)
 
 	// Make the API request
 	url := fmt.Sprintf("https://leakix.net/api/subdomains/%s", domain)
@@ -30,7 +31,7 @@ func (s *Leakix) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	}
 
 	if !strings.Contains(string(body), domain) {
-		fmt.Println(string(body))
+		helper.ErrorPrintln(string(body))
 		return nil, nil
 	}
 

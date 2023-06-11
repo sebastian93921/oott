@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"oott/helper"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -14,7 +15,7 @@ type Rapiddns struct {
 }
 
 func (s *Rapiddns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	fmt.Println("[+] Scanning subdomains on Rapiddns:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on Rapiddns:", domain)
 
 	// Make the API request
 	url := fmt.Sprintf("https://rapiddns.io/subdomain/%s?full=1#result", domain)
@@ -32,7 +33,7 @@ func (s *Rapiddns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
 	if err != nil {
-		fmt.Println("[!] Error parsing HTML:", err)
+		helper.ErrorPrintln("[!] Error parsing HTML:", err)
 		return nil, nil
 	}
 

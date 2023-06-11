@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"oott/helper"
 	"regexp"
 	"strings"
 )
@@ -12,19 +13,19 @@ type EmailFormat struct {
 }
 
 func (ef *EmailFormat) ScanEmails(domain string) ([]EmailDetails, error) {
-	fmt.Println("[+] Scanning emails on EmailFormat:", domain)
+	helper.InfoPrintln("[+] Scanning emails on EmailFormat:", domain)
 
 	url := fmt.Sprintf("https://www.email-format.com/d/%s/", domain)
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println(err)
+		helper.ErrorPrintln(err)
 		return nil, nil
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(err)
+		helper.ErrorPrintln(err)
 		return nil, nil
 	}
 

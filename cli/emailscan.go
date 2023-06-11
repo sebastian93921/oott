@@ -5,10 +5,11 @@ import (
 	"strings"
 
 	"oott/emails"
+	"oott/helper"
 )
 
 func StartEmailScan(configuration Configuration, domain string) []emails.EmailDetails {
-	fmt.Println("[+] Scanning emails...")
+	helper.InfoPrintln("[+] Scanning emails...")
 
 	emails.IsFastScan = configuration.IsFastScan
 	emails.VerboseMode = configuration.VerboseMode
@@ -18,16 +19,16 @@ func StartEmailScan(configuration Configuration, domain string) []emails.EmailDe
 		// Add more EmailScanner implementations here
 	}
 
-	fmt.Println("[+] Below is the list of modules that will be used for email scanning against domain [", domain, "]")
-	fmt.Println("[+] Fast Scan enabled [", configuration.IsFastScan, "]")
-	fmt.Println("========================================================================================>")
+	helper.InfoPrintln("[+] Below is the list of modules that will be used for email scanning against domain [", domain, "]")
+	helper.InfoPrintln("[+] Fast Scan enabled [", configuration.IsFastScan, "]")
+	helper.InfoPrintln("========================================================================================>")
 	for _, sf := range emailScanResults {
 		structName := fmt.Sprintf("%T", sf)
 		parts := strings.Split(structName, ".")
-		fmt.Println(parts[len(parts)-1])
+		helper.ResultPrintln(parts[len(parts)-1])
 	}
-	fmt.Println("<========================================================================================")
-	fmt.Println("If you agree the uses of modules, press Enter to continue...")
+	helper.InfoPrintln("<========================================================================================")
+	helper.InfoPrintln("If you agree the uses of modules, press Enter to continue...")
 	fmt.Scanln()
 
 	var emailLists []emails.EmailDetails
@@ -35,7 +36,7 @@ func StartEmailScan(configuration Configuration, domain string) []emails.EmailDe
 	for _, sf := range emailScanResults {
 		results, err := sf.ScanEmails(domain)
 		if err != nil {
-			fmt.Println("Unexpected Error Occur:", err)
+			helper.ErrorPrintln("Unexpected Error Occur:", err)
 			continue
 		}
 
@@ -61,13 +62,13 @@ func StartEmailScan(configuration Configuration, domain string) []emails.EmailDe
 		})
 	}
 
-	fmt.Println("========================================================================================>")
+	helper.InfoPrintln("========================================================================================>")
 	for _, email := range emailLists {
-		fmt.Printf("Email: %-60s Source: %s\n", email.Email, email.Source)
+		helper.ResultPrintf("Email: %-60s Source: %s\n", email.Email, email.Source)
 	}
-	fmt.Println("<========================================================================================")
+	helper.InfoPrintln("<========================================================================================")
 
-	fmt.Println("[+] End of email scan")
+	helper.InfoPrintln("[+] End of email scan")
 
 	return emailLists
 }

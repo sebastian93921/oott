@@ -9,7 +9,7 @@ import (
 )
 
 func StartSubDomainScan(configuration Configuration, domain string) []subdomains.SubDomainDetails {
-	fmt.Println("[+] Scanning subdomains...")
+	helper.InfoPrintln("[+] Scanning subdomains...")
 
 	subdomains.IsFastScan = configuration.IsFastScan
 	subdomains.VerboseMode = configuration.VerboseMode
@@ -26,23 +26,23 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 		// Add more SubDomainScanner implementations here
 	}
 
-	fmt.Println("[+] Below is the list of modules that will be used for subdomain scanning against domain [", domain, "]")
-	fmt.Println("[+] Fast Scan enabled [", configuration.IsFastScan, "]")
-	fmt.Println("========================================================================================>")
+	helper.InfoPrintln("[+] Below is the list of modules that will be used for subdomain scanning against domain [", domain, "]")
+	helper.InfoPrintln("[+] Fast Scan enabled [", configuration.IsFastScan, "]")
+	helper.InfoPrintln("========================================================================================>")
 	for _, sf := range subdomainScanResults {
 		structName := fmt.Sprintf("%T", sf)
 		parts := strings.Split(structName, ".")
-		fmt.Println(parts[len(parts)-1])
+		helper.ResultPrintln(parts[len(parts)-1])
 	}
-	fmt.Println("<========================================================================================")
-	fmt.Println("If you agree the uses of modules, press Enter to continue...")
+	helper.InfoPrintln("<========================================================================================")
+	helper.InfoPrintln("If you agree the uses of modules, press Enter to continue...")
 	fmt.Scanln()
 
 	var subdomainLists []subdomains.SubDomainDetails
 	for _, sf := range subdomainScanResults {
 		subdomains, err := sf.ScanSubdomains(domain)
 		if err != nil {
-			fmt.Println("Unexpected Error Occur:", err)
+			helper.ErrorPrintln("Unexpected Error Occur:", err)
 			continue
 		}
 
@@ -63,7 +63,7 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 		groupedResults[domain] = append(groupedResults[domain], result)
 	}
 
-	fmt.Println("========================================================================================>")
+	helper.InfoPrintln("========================================================================================>")
 	interruptHandler()
 
 	csvData := [][]string{
@@ -71,9 +71,9 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 	}
 
 	for domain, results := range groupedResults {
-		fmt.Println("Domain:", domain)
+		helper.ResultPrintln("Domain:", domain)
 		for _, subdomain := range results {
-			fmt.Printf("  +- Address: %-40s Type: %-10s Source: %s\n", subdomain.Address, subdomain.Type, subdomain.Source)
+			helper.ResultPrintf("  +- Address: %-40s Type: %-10s Source: %s\n", subdomain.Address, subdomain.Type, subdomain.Source)
 			csvData = append(csvData, []string{domain, subdomain.Address, subdomain.Type, subdomain.Source})
 		}
 
@@ -81,33 +81,33 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 			select {
 			case <-cancel:
 				// Scanner canceled, exit the loop
-				fmt.Println("[+] Cancel sign received, Stop Status Code Test..")
+				helper.InfoPrintln("[+] Cancel sign received, Stop Status Code Test..")
 				break
 			default:
 				// HTTPS
 				httpsStatusCode, err := helper.GetHttpStatusCode("https://" + domain)
 				if err == nil {
-					fmt.Printf("    +- HTTPS status code: %s\n", httpsStatusCode)
+					helper.ResultPrintf("    +- HTTPS status code: %s\n", httpsStatusCode)
 				} else if configuration.VerboseMode {
-					fmt.Printf("    +- HTTPS status code: ERR\n")
+					helper.ResultPrintf("    +- HTTPS status code: ERR\n")
 				}
 
 				// HTTP
 				httpStatusCode, err := helper.GetHttpStatusCode("http://" + domain)
 				if err == nil {
-					fmt.Printf("    +- HTTP status code: %s\n", httpStatusCode)
+					helper.ResultPrintf("    +- HTTP status code: %s\n", httpStatusCode)
 				} else if configuration.VerboseMode {
-					fmt.Printf("    +- HTTP status code: ERR\n")
+					helper.ResultPrintf("    +- HTTP status code: ERR\n")
 				}
 			}
 		}
 	}
-	fmt.Println("<========================================================================================")
-	fmt.Println("[+] End of subdomains scan")
+	helper.InfoPrintln("<========================================================================================")
+	helper.InfoPrintln("[+] End of subdomains scan")
 
 	filename, err := helper.OutputCsv(csvData)
 	if err == nil {
-		fmt.Println("[+] Please find CSV file in", filename)
+		helper.InfoPrintln("[+] Please find CSV file in", filename)
 	}
 
 	return subdomainLists

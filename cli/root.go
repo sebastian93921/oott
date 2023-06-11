@@ -2,10 +2,11 @@ package cli
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"oott/helper"
 )
 
 type Configuration struct {
@@ -34,9 +35,6 @@ func Start() {
 
 	if config.Help {
 		// Print help details
-		fmt.Println("Usage:")
-		fmt.Println("  oott [arugments]")
-		fmt.Println("Flags:")
 		flag.PrintDefaults()
 
 		// Exit the program
@@ -44,7 +42,7 @@ func Start() {
 	}
 
 	if *domain == "" {
-		fmt.Println("[!] Please provide the '-domain' argument")
+		helper.ErrorPrintln("[!] Please provide the '-domain' argument")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -72,7 +70,7 @@ func interruptHandler() {
 	go func() {
 		// Wait for the interrupt signal
 		<-interrupt
-		fmt.Println("\n[!] Ctrl+C pressed. Exiting...")
+		helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
 		// Signal cancellation to stop the scanner
 		close(cancel)
 	}()

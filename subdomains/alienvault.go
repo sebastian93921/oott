@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"oott/helper"
 )
 
 type PassiveDNS struct {
@@ -18,7 +19,7 @@ type Alienvault struct {
 }
 
 func (s *Alienvault) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	fmt.Println("[+] Scanning subdomains on Alienvault:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on Alienvault:", domain)
 
 	// Make the API request
 	url := fmt.Sprintf("https://otx.alienvault.com/api/v1/indicators/domain/%s/passive_dns", domain)
@@ -39,7 +40,7 @@ func (s *Alienvault) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	passiveDNS, ok := data["passive_dns"].([]interface{})
 	if !ok {
-		fmt.Println("[!] Invalid JSON format")
+		helper.ErrorPrintln("[!] Invalid JSON format")
 		return nil, nil
 	}
 

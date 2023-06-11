@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"oott/helper"
 	"regexp"
 	"strings"
 )
@@ -14,7 +15,7 @@ type Archiveorg struct {
 }
 
 func (s *Archiveorg) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	fmt.Println("[+] Scanning subdomains on Archiveorg:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on Archiveorg:", domain)
 
 	// Make the API request
 	url := fmt.Sprintf("http://web.archive.org/cdx/search/cdx?url=%s&matchType=domain&output=json&fl=original&collapse=original", domain)
@@ -50,7 +51,7 @@ func (s *Archiveorg) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	}
 
 	if VerboseMode {
-		fmt.Println("[-] Distinct Domain and Subdomain Names")
+		helper.VerbosePrintln("[-] Distinct Domain and Subdomain Names..")
 	}
 	var subdomains []SubDomainDetails
 	for _, domainSubdomain := range distinctList {

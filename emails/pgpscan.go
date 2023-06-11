@@ -1,9 +1,9 @@
 package emails
 
 import (
-	"fmt"
 	"io"
 	"net/http"
+	"oott/helper"
 	"regexp"
 	"strings"
 	"time"
@@ -13,7 +13,7 @@ type PGPScan struct {
 }
 
 func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
-	fmt.Println("[+] Scanning emails on PGPScan:", domain)
+	helper.InfoPrintln("[+] Scanning emails on PGPScan:", domain)
 
 	searchURLs := []string{
 		"https://keyserver.ubuntu.com/pks/lookup?fingerprint=on&op=vindex&search=" + domain,
@@ -28,18 +28,18 @@ func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
 		}
 		response, err := client.Get(url)
 		if err != nil {
-			fmt.Println("[!] Error on querying server:", err)
+			helper.ErrorPrintln("[!] Error on querying server:", err)
 			continue
 		}
 
 		if response.StatusCode == http.StatusOK {
-			fmt.Printf("[+] Got results from %s:\n", url)
+			helper.InfoPrintf("[+] Got results from %s:\n", url)
 			content := response.Body
 			defer content.Close()
 
 			data, err := io.ReadAll(content)
 			if err != nil {
-				fmt.Println("[!] Error on querying server:", err)
+				helper.ErrorPrintln("[!] Error on querying server:", err)
 				continue
 			}
 
@@ -50,13 +50,13 @@ func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
 			// Deduplicate the email addresses using a map
 			for _, match := range matches {
 				if VerboseMode {
-					fmt.Println("[-] Found email from results:", match)
+					helper.VerbosePrintln("[-] Found email from results:", match)
 				}
 				deduplicated[match] = true
 			}
 
 		} else {
-			fmt.Printf("Request failed with status code: %d\n", response.StatusCode)
+			helper.ErrorPrintln("[!] Request failed with status code: %d\n", response.StatusCode)
 		}
 	}
 

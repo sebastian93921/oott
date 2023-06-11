@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"oott/helper"
 	"os"
 	"os/exec"
 	"strings"
@@ -22,15 +23,15 @@ var massdnsCommand = "massdns"
 var tmpfolder = "/tmp"
 
 func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	fmt.Println("[+] Scanning subdomains on Massdns:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on Massdns:", domain)
 	s.TargetDomain = domain
 
 	wordlistFilePath := tmpfolder + "/subdomains-prefix.txt"
 	resolversFilePath := tmpfolder + "/dns-resolvers.txt"
 
 	if !isMassDNSInstalled() {
-		fmt.Println("[!] MassDNS is not installed or not found. Run 'sudo apt install massdns' to install massdns.")
-		fmt.Println("Press Enter to continue...")
+		helper.ErrorPrintln("[!] MassDNS is not installed or not found. Run 'sudo apt install massdns' to install massdns.")
+		helper.ErrorPrintln("Press Enter to continue...")
 		fmt.Scanln()
 		return nil, nil
 	}
@@ -38,7 +39,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	// Download the file
 	err := downloadFile(resolversUrl, resolversFilePath)
 	if err != nil {
-		fmt.Println("[!] Error downloading file:", err)
+		helper.ErrorPrintln("[!] Error downloading file:", err)
 		return nil, nil
 	}
 
@@ -48,16 +49,16 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		err = downloadFile(wordlist, wordlistFilePath)
 	}
 	if err != nil {
-		fmt.Println("[!] Error downloading file:", err)
+		helper.ErrorPrintln("[!] Error downloading file:", err)
 		return nil, nil
 	}
 
-	fmt.Println("[+] Files downloaded successfully.")
+	helper.InfoPrintln("[+] Files downloaded successfully.")
 
 	// Open the file for reading
 	file, err := os.Open(wordlistFilePath)
 	if err != nil {
-		fmt.Printf("[!] Failed to open file: %v\n", err)
+		helper.ErrorPrintf("[!] Failed to open file: %v\n", err)
 		return nil, nil
 	}
 	defer file.Close()
@@ -81,7 +82,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		}
 	} else {
 		// Create combinations for subdomain prefix
-		fmt.Println("[+] Generating combination of prefix...")
+		helper.InfoPrintln("[+] Generating combination of prefix...")
 		var subdomainPrefixesNew []string
 		totalCombinations := len(subdomainPrefixes) * len(subdomainPrefixes) * 2
 		combinationsGenerated := 0
@@ -93,7 +94,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 			for range ticker.C {
 				if VerboseMode {
-					fmt.Printf("[-] Generating combination of prefix, please wait... %d/%d\n", combinationsGenerated, totalCombinations)
+					helper.VerbosePrintln("[-] Generating combination of prefix, please wait... %d/%d\n", combinationsGenerated, totalCombinations)
 				}
 				if generateProcessFinished {
 					return
@@ -125,7 +126,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 }
 
 func downloadFile(url string, filePath string) error {
-	fmt.Println("[+] Downloading files from " + url + " ...")
+	helper.InfoPrintln("[+] Downloading files from " + url + " ...")
 	// Create the output file
 	out, err := os.Create(filePath)
 	if err != nil {
@@ -174,8 +175,8 @@ func isMassDNSInstalled() bool {
 func (s *Massdns) runMassDNS(resolversFilePath string, subdomains []string) error {
 	InterruptHandler()
 
-	fmt.Println("[+] Size of subdomains generated: ", len(subdomains), " . Start running, please wait..")
-	fmt.Println("[+] Press Ctrl+C to cancel this operation if it doesn't produce any results for an extended period of time.")
+	helper.InfoPrintln("[+] Size of subdomains generated: ", len(subdomains), " . Start running, please wait..")
+	helper.InfoPrintln("[+] Press Ctrl+C to cancel this operation if it doesn't produce any results for an extended period of time.")
 	err := s.runMassDNSByType(resolversFilePath, subdomains, "A")
 	if err != nil {
 		return err
@@ -200,13 +201,13 @@ func (s *Massdns) runRootScan(resolversFilePath string, domaintype string) []str
 	// Create a pipe for reading the command's output
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Printf("[!] Failed to create pipe: %v\n", err)
+		helper.ErrorPrintf("[!] Failed to create pipe: %v\n", err)
 		return nil
 	}
 
 	// Start the command
 	if err := cmd.Start(); err != nil {
-		fmt.Printf("[!] Failed to start command: %v\n", err)
+		helper.ErrorPrintf("[!] Failed to start command: %v\n", err)
 		return nil
 	}
 
@@ -218,7 +219,7 @@ func (s *Massdns) runRootScan(resolversFilePath string, domaintype string) []str
 		select {
 		case <-cancel:
 			// Scanner canceled, exit the loop
-			fmt.Println("[+] Cancel sign received, exiting..")
+			helper.InfoPrintln("[+] Cancel sign received, exiting..")
 			break
 		default:
 			line := scanner.Text()
@@ -226,7 +227,7 @@ func (s *Massdns) runRootScan(resolversFilePath string, domaintype string) []str
 			var result map[string]interface{}
 			err := json.Unmarshal([]byte(line), &result)
 			if err != nil {
-				fmt.Printf("[!] Failed to parse JSON: %v\n", err)
+				helper.ErrorPrintf("[!] Failed to parse JSON: %v\n", err)
 				continue
 			}
 
@@ -261,13 +262,13 @@ func (s *Massdns) runRootScan(resolversFilePath string, domaintype string) []str
 
 	// Check if there was any error in scanning
 	if err := scanner.Err(); err != nil {
-		fmt.Printf("[!] Failed to read command output: %v\n", err)
+		helper.ErrorPrintf("[!] Failed to read command output: %v\n", err)
 		return nil
 	}
 
 	// Wait for the command to finish
 	if err := cmd.Wait(); err != nil {
-		fmt.Printf("[!] Command execution failed: %v\n", err)
+		helper.ErrorPrintf("[!] Command execution failed: %v\n", err)
 		return nil
 	}
 
@@ -276,11 +277,11 @@ func (s *Massdns) runRootScan(resolversFilePath string, domaintype string) []str
 
 func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string, domaintype string) error {
 	var subDomainResult []SubDomainDetails
-	fmt.Println("[+] Starting Root Addresses scan for type", domaintype)
+	helper.InfoPrintln("[+] Starting Root Addresses scan for type", domaintype)
 	rootAddresses := s.runRootScan(resolversFilePath, domaintype)
-	fmt.Println("[+] Root addresses found: ", rootAddresses)
+	helper.InfoPrintln("[+] Root addresses found: ", rootAddresses)
 
-	fmt.Println("[+] Starting Subdomain scan for type", domaintype)
+	helper.InfoPrintln("[+] Starting Subdomain scan for type", domaintype)
 
 	// Run a command
 	cmd := exec.Command(massdnsCommand, "-r", resolversFilePath, "-t", domaintype, "-s", "500", "-o", "J", "-q")
@@ -294,13 +295,13 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 	// Create a pipe for reading the command's output
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Printf("[!] Failed to create pipe: %v\n", err)
+		helper.ErrorPrintf("[!] Failed to create pipe: %v\n", err)
 		return err
 	}
 
 	// Start the command
 	if err := cmd.Start(); err != nil {
-		fmt.Printf("[!] Failed to start command: %v\n", err)
+		helper.ErrorPrintf("[!] Failed to start command: %v\n", err)
 		return err
 	}
 
@@ -314,7 +315,7 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 		select {
 		case <-cancel:
 			// Scanner canceled, exit the loop
-			fmt.Println("[+] Cancel sign received, exiting..")
+			helper.InfoPrintln("[+] Cancel sign received, exiting..")
 			break
 		default:
 			line := scanner.Text()
@@ -323,7 +324,7 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 			var result map[string]interface{}
 			err := json.Unmarshal([]byte(line), &result)
 			if err != nil {
-				fmt.Printf("[!] Failed to parse JSON: %v\n", err)
+				helper.ErrorPrintf("[!] Failed to parse JSON: %v\n", err)
 				continue
 			}
 
@@ -362,8 +363,8 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 						// Not a valid host
 						continue
 					}
-					// fmt.Println(line)
-					fmt.Printf("[MassDNS] Name: %s, Type: %s, Status: %s, Progress: %d/%d(%d%%), Resolver: %s\n", name, typeVal, status, scanCount, total, (scanCount * 100 / total), resolver)
+					// helper.VerbosePrintln(line)
+					helper.InfoPrintf("[MassDNS] Name: %s, Type: %s, Status: %s, Progress: %d/%d(%d%%), Resolver: %s\n", name, typeVal, status, scanCount, total, (scanCount * 100 / total), resolver)
 					subdomain := SubDomainDetails{
 						DomainName: strings.TrimSuffix(name, "."),
 						Address:    address,
@@ -385,13 +386,13 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 
 	// Check if there was any error in scanning
 	if err := scanner.Err(); err != nil {
-		fmt.Printf("[!] Failed to read command output: %v\n", err)
+		helper.ErrorPrintf("[!] Failed to read command output: %v\n", err)
 		return err
 	}
 
 	// Wait for the command to finish
 	if err := cmd.Wait(); err != nil {
-		fmt.Printf("[!] Command execution failed: %v\n", err)
+		helper.ErrorPrintf("[!] Command execution failed: %v\n", err)
 		return err
 	}
 

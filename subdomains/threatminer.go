@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"oott/helper"
 )
 
 type Threatminer struct {
@@ -11,7 +12,7 @@ type Threatminer struct {
 }
 
 func (s *Threatminer) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	fmt.Println("[+] Scanning subdomains on Threatminer:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on Threatminer:", domain)
 
 	// Make the API request
 	url := fmt.Sprintf("https://api.threatminer.org/v2/domain.php?q=%s&rt=5", domain)
