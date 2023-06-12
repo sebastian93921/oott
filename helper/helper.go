@@ -3,6 +3,7 @@ package helper
 import (
 	"encoding/csv"
 	"net/http"
+	"oott/lib"
 	"os"
 	"strconv"
 	"time"
@@ -13,7 +14,16 @@ func GetHttpStatusCode(url string) (string, error) {
 		Timeout: time.Second * 2,
 	}
 
-	resp, err := client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	headers := http.Header{}
+	headers.Set("User-Agent", lib.Config.Useragent)
+	req.Header = headers
+
+	resp, err := client.Do(req)
+
 	if err != nil {
 		return "", err
 	}
