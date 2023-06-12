@@ -49,7 +49,7 @@ func Start() {
 	}
 
 	if *domain == "" {
-		helper.ErrorPrintln("[!] Please provide the '-domain' argument")
+		helper.ErrorPrintln("[!] Please provide the '-domain / -d' argument")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
