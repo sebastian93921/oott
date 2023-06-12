@@ -329,6 +329,10 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 				continue
 			}
 
+			if VerboseMode {
+				helper.VerbosePrintln("[-] Received response:", line)
+			}
+
 			// Extract name, type, and status
 			name := result["name"].(string)
 			typeVal := result["type"].(string)
@@ -364,7 +368,6 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 						// Not a valid host
 						continue
 					}
-					// helper.VerbosePrintln(line)
 					helper.InfoPrintf("[MassDNS] Name: %s, Type: %s, Status: %s, Progress: %d/%d(%d%%), Resolver: %s\n", name, typeVal, status, scanCount, total, (scanCount * 100 / total), resolver)
 					subdomain := SubDomainDetails{
 						DomainName: strings.TrimSuffix(name, "."),
