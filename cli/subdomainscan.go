@@ -28,6 +28,7 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 
 	helper.InfoPrintln("[+] Below is the list of modules that will be used for subdomain scanning against domain [", domain, "]")
 	helper.InfoPrintln("[+] Fast Scan enabled [", configuration.IsFastScan, "]")
+	helper.InfoPrintln("[+] HTTP Status Scan enabled [", configuration.HttpStatusCodeTest, "]")
 	helper.InfoPrintln("========================================================================================>")
 	for _, sf := range subdomainScanResults {
 		structName := fmt.Sprintf("%T", sf)
