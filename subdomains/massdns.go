@@ -44,6 +44,10 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, nil
 	}
 
+	if VerboseMode {
+		helper.VerbosePrintln("[-] Running massdns scan with number of concurrent resolvers: ", s.NumberOfResolverCount)
+	}
+
 	// Download the file
 	err := downloadFile(resolversUrl, resolversFilePath)
 	if err != nil {

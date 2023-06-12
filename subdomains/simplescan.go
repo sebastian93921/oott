@@ -40,6 +40,10 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		workerCount = ConcurrentRunningThread
 	}
 
+	if VerboseMode {
+		helper.VerbosePrintln("[-] Running simple scan with number of workers: ", workerCount)
+	}
+
 	// Download the file
 	err := downloadFile(wordlist, wordlistFilePath)
 	if err != nil {
