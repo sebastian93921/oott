@@ -25,7 +25,7 @@ var cancel = make(chan struct{})
 
 func Start() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains.")
-	domain = flag.String("d", "", "Domain to scan for subdomains (shorthand).")
+	flag.StringVar(domain, "d", "", "Domain to scan for subdomains (shorthand).")
 
 	flag.BoolVar(&config.Help, "help", false, "Show help.")
 	flag.BoolVar(&config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain.")
