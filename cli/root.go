@@ -7,21 +7,10 @@ import (
 	"syscall"
 
 	"oott/helper"
+	"oott/lib"
 )
 
-type Configuration struct {
-	Help                    bool
-	IsFastScan              bool
-	SubdomainScan           bool
-	EmailScan               bool
-	VerboseMode             bool
-	HttpStatusCodeTest      bool
-	ConcurrentRunningThread int
-	NoExport                bool
-}
-
 var (
-	config    Configuration
 	cancel    = make(chan struct{})
 	interrupt = make(chan os.Signal, 1)
 )
@@ -30,21 +19,21 @@ func Start() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains.")
 	flag.StringVar(domain, "d", "", "Domain to scan for subdomains (shorthand).")
 
-	flag.BoolVar(&config.Help, "help", false, "Show help.")
-	flag.BoolVar(&config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain.")
-	flag.BoolVar(&config.EmailScan, "email-scan", false, "Perform email scanning by target domain.")
-	flag.BoolVar(&config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
-	flag.BoolVar(&config.HttpStatusCodeTest, "http-status-scan", false, "Get HTTP status code for each subdomain found.")
-	flag.BoolVar(&config.NoExport, "no-export", false, "Disable export CSV features.")
+	flag.BoolVar(&lib.Config.Help, "help", false, "Show help.")
+	flag.BoolVar(&lib.Config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain.")
+	flag.BoolVar(&lib.Config.EmailScan, "email-scan", false, "Perform email scanning by target domain.")
+	flag.BoolVar(&lib.Config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
+	flag.BoolVar(&lib.Config.HttpStatusCodeTest, "http-status-scan", false, "Get HTTP status code for each subdomain found.")
+	flag.BoolVar(&lib.Config.NoExport, "no-export", false, "Disable export CSV features.")
 
-	flag.IntVar(&config.ConcurrentRunningThread, "threads", 500, "Maximum number of Concurrent thread uses.")
-	flag.IntVar(&config.ConcurrentRunningThread, "t", 500, "Maximum number of Concurrent thread uses (shorthand).")
+	flag.IntVar(&lib.Config.ConcurrentRunningThread, "threads", 500, "Maximum number of Concurrent thread uses.")
+	flag.IntVar(&lib.Config.ConcurrentRunningThread, "t", 500, "Maximum number of Concurrent thread uses (shorthand).")
 
-	flag.BoolVar(&config.VerboseMode, "verbose", false, "Enable verbose mode")
-	flag.BoolVar(&config.VerboseMode, "v", false, "Enable verbose mode (shorthand)")
+	flag.BoolVar(&lib.Config.VerboseMode, "verbose", false, "Enable verbose mode")
+	flag.BoolVar(&lib.Config.VerboseMode, "v", false, "Enable verbose mode (shorthand)")
 	flag.Parse()
 
-	if config.Help {
+	if lib.Config.Help {
 		// Print help details
 		flag.PrintDefaults()
 
@@ -58,18 +47,18 @@ func Start() {
 		os.Exit(1)
 	}
 
-	if config.VerboseMode {
+	if lib.Config.VerboseMode {
 		helper.VerbosePrintln("[-] Verbose mode is enabled, resulting in more detailed console output.")
 	}
 
-	if config.SubdomainScan {
+	if lib.Config.SubdomainScan {
 		// Return subdomain list
-		_ = StartSubDomainScan(config, *domain)
+		_ = StartSubDomainScan(*domain)
 	}
 
-	if config.EmailScan {
+	if lib.Config.EmailScan {
 		// Return email list
-		_ = StartEmailScan(config, *domain)
+		_ = StartEmailScan(*domain)
 	}
 }
 
@@ -85,7 +74,7 @@ func CreateInterruptHandler() {
 	go func() {
 		// Wait for the interrupt signal
 		<-interrupt
-		if config.VerboseMode {
+		if lib.Config.VerboseMode {
 			helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
 		}
 		// Signal cancellation to stop the scanner

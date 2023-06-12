@@ -6,13 +6,12 @@ import (
 
 	"oott/emails"
 	"oott/helper"
+	"oott/lib"
 )
 
-func StartEmailScan(configuration Configuration, domain string) []emails.EmailDetails {
+func StartEmailScan(domain string) []emails.EmailDetails {
 	helper.InfoPrintln("[+] Scanning emails...")
 
-	emails.IsFastScan = configuration.IsFastScan
-	emails.VerboseMode = configuration.VerboseMode
 	emailScanResults := []emails.EmailScanner{
 		&emails.EmailFormat{},
 		&emails.PGPScan{},
@@ -20,7 +19,7 @@ func StartEmailScan(configuration Configuration, domain string) []emails.EmailDe
 	}
 
 	helper.InfoPrintln("[+] Below is the list of modules that will be used for email scanning against domain [", domain, "]")
-	helper.InfoPrintln("[+] Fast Scan enabled [", configuration.IsFastScan, "]")
+	helper.InfoPrintln("[+] Fast Scan enabled [", lib.Config.IsFastScan, "]")
 	helper.InfoPrintln("========================================================================================>")
 	for _, sf := range emailScanResults {
 		structName := fmt.Sprintf("%T", sf)

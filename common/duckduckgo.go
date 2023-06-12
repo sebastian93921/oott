@@ -1,48 +1,65 @@
-package subdomains
+package common
 
 import (
 	"encoding/json"
 	"fmt"
-	"html"
 	"io/ioutil"
 	"net/http"
 	"oott/helper"
-	"regexp"
+	"oott/lib"
 	"strings"
 )
 
 type DuckDuckGo struct {
 	TotalResults string
 	API          string
+	Useragent    string
 }
 
-func (s *DuckDuckGo) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	helper.InfoPrintln("[+] Scanning subdomains on DuckDuckGo:", domain)
+var duckduckgoCache DuckDuckGo
 
+func DuckDuckGoSearch(domain string, useragent string) (string, error) {
+	if duckduckgoCache == (DuckDuckGo{}) {
+		if lib.Config.VerboseMode {
+			helper.VerbosePrintln("[-] Creating new DuckDuckGo search instance...")
+		}
+		duckduckgoCache = DuckDuckGo{
+			API:       "https://api.duckduckgo.com/?q=%s&format=json&pretty=1",
+			Useragent: useragent,
+		}
+		return duckduckgoCache.DuckDuckGoSearch(domain)
+	} else {
+		if lib.Config.VerboseMode {
+			helper.VerbosePrintln("[-] Using existing DuckDuckGo search instance...")
+		}
+		return duckduckgoCache.DuckDuckGoSearch(domain)
+	}
+}
+
+func (s *DuckDuckGo) DuckDuckGoSearch(domain string) (string, error) {
 	if s.TotalResults == "" {
-		s.API = "https://api.duckduckgo.com/?q=%s&format=json&pretty=1"
-
-		url := fmt.Sprintf("https://api.duckduckgo.com/?q=%s&format=json&pretty=1", domain)
+		url := fmt.Sprintf(s.API, domain)
 
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			helper.ErrorPrintln(err)
-			return nil, err
+			return "", err
 		}
 		headers := http.Header{}
-		headers.Set("User-Agent", useragent)
+		headers.Set("User-Agent", s.Useragent)
 		req.Header = headers
 
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, err
+			helper.ErrorPrintln(err)
+			return "", err
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			helper.ErrorPrintln(err)
-			return nil, err
+			return "", err
 		}
 
 		results := string(body)
@@ -51,7 +68,7 @@ func (s *DuckDuckGo) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		urls, err := s.Crawl(results)
 		if err != nil {
 			helper.ErrorPrintln(err)
-			return nil, err
+			return "", err
 		}
 
 		helper.InfoPrintln("[+] DuckDuckGo found some of the URLs:", urls)
@@ -63,53 +80,7 @@ func (s *DuckDuckGo) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	}
 
-	elements := s.extractURLsFromText(s.TotalResults)
-	encountered := map[string]bool{}
-	var result []SubDomainDetails
-	for v := range elements {
-		if encountered[elements[v]] == true {
-			continue
-		}
-
-		encountered[elements[v]] = true
-
-		if strings.Contains(elements[v], domain) {
-			// Remove "https://" or "http://" prefix
-			domainname := strings.TrimPrefix(elements[v], "https://")
-			domainname = strings.TrimPrefix(domainname, "http://")
-
-			subdomain := SubDomainDetails{
-				DomainName: domainname,
-				Source:     "DuckDuckGo",
-			}
-			result = append(result, subdomain)
-		}
-	}
-
-	return result, nil
-}
-
-func (s *DuckDuckGo) extractURLsFromText(text string) []string {
-	// Remove escape characters
-	text = html.UnescapeString(text)
-
-	// Remove HTML tags
-	htmlRegex := regexp.MustCompile(`<[^>]*>`)
-	text = htmlRegex.ReplaceAllString(text, "")
-
-	// Remove backslash characters
-	text = strings.ReplaceAll(text, "\\", "")
-
-	// Regular expression pattern to match URLs
-	urlPattern := `https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+`
-
-	// Compile the regular expression pattern
-	re := regexp.MustCompile(urlPattern)
-
-	// Find all matches in the input text
-	matches := re.FindAllString(text, -1)
-
-	return matches
+	return s.TotalResults, nil
 }
 
 func (s *DuckDuckGo) Crawl(text string) ([]string, error) {
@@ -175,7 +146,7 @@ func (s *DuckDuckGo) filterURLs(urls []string) []string {
 }
 
 func (s *DuckDuckGo) fetchResponse(url string) string {
-	if VerboseMode {
+	if lib.Config.VerboseMode {
 		helper.VerbosePrintln("[-] Fetching seperated website from response:", url)
 	}
 	client := &http.Client{}

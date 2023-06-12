@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"oott/helper"
+	"oott/lib"
 	"os"
 	"os/exec"
 	"strconv"
@@ -32,7 +33,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	helper.InfoPrintln("[+] Scanning subdomains on Massdns:", domain)
 	s.TargetDomain = domain
-	s.NumberOfResolverCount = ConcurrentRunningThread
+	s.NumberOfResolverCount = lib.Config.ConcurrentRunningThread
 
 	wordlistFilePath := tmpfolder + "/subdomains-prefix.txt"
 	resolversFilePath := tmpfolder + "/dns-resolvers.txt"
@@ -44,7 +45,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, nil
 	}
 
-	if VerboseMode {
+	if lib.Config.VerboseMode {
 		helper.VerbosePrintln("[-] Running massdns scan with number of concurrent resolvers: ", s.NumberOfResolverCount)
 	}
 
@@ -55,7 +56,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, nil
 	}
 
-	if IsFastScan {
+	if lib.Config.IsFastScan {
 		err = downloadFile(wordlist_long, wordlistFilePath)
 	} else {
 		err = downloadFile(wordlist, wordlistFilePath)
@@ -86,7 +87,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	var subdomainsString []string
 
-	if IsFastScan {
+	if lib.Config.IsFastScan {
 		// Iterate over the subdomain prefixes
 		for _, prefix := range subdomainPrefixes {
 			subdomain := fmt.Sprintf("%s.%s", prefix, domain)
@@ -105,7 +106,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 			defer ticker.Stop()
 
 			for range ticker.C {
-				if VerboseMode {
+				if lib.Config.VerboseMode {
 					helper.VerbosePrintln("[-] Generating combination of prefix, please wait... %d/%d\n", combinationsGenerated, totalCombinations)
 				}
 				if generateProcessFinished {
@@ -338,7 +339,7 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 				continue
 			}
 
-			if VerboseMode {
+			if lib.Config.VerboseMode {
 				helper.VerbosePrintln("[-] Received response:", line)
 			}
 
@@ -419,7 +420,7 @@ func (s *Massdns) isFalsePositive(rootAddresses []string, address string) bool {
 		}
 	}
 	s.FalsePositiveHost[address] = s.FalsePositiveHost[address] + 1
-	if IsFastScan {
+	if lib.Config.IsFastScan {
 		// If the address occurs more then 4 times but it's not from our root addresses, it is possible a false possitve
 		if s.FalsePositiveHost[address] > 4 {
 			return true

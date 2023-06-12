@@ -5,15 +5,13 @@ import (
 	"strings"
 
 	"oott/helper"
+	"oott/lib"
 	"oott/subdomains"
 )
 
-func StartSubDomainScan(configuration Configuration, domain string) []subdomains.SubDomainDetails {
+func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 	helper.InfoPrintln("[+] Scanning subdomains...")
 
-	subdomains.IsFastScan = configuration.IsFastScan
-	subdomains.VerboseMode = configuration.VerboseMode
-	subdomains.ConcurrentRunningThread = config.ConcurrentRunningThread
 	subdomainScanResults := []subdomains.SubDomainScanner{
 		&subdomains.Hackertarget{}, // Has max API Limit
 		&subdomains.Leakix{},
@@ -30,9 +28,9 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 	}
 
 	helper.InfoPrintln("[+] Below is the list of modules that will be used for subdomain scanning against domain [", domain, "]")
-	helper.InfoPrintln("[+] Fast Scan enabled [", subdomains.IsFastScan, "]")
-	helper.InfoPrintln("[+] HTTP Status Scan enabled [", configuration.HttpStatusCodeTest, "]")
-	helper.InfoPrintln("[+] Maximum number of concurrent thread [", subdomains.ConcurrentRunningThread, "]")
+	helper.InfoPrintln("[+] Fast Scan enabled [", lib.Config.IsFastScan, "]")
+	helper.InfoPrintln("[+] HTTP Status Scan enabled [", lib.Config.HttpStatusCodeTest, "]")
+	helper.InfoPrintln("[+] Maximum number of concurrent thread [", lib.Config.ConcurrentRunningThread, "]")
 	helper.InfoPrintln("========================================================================================>")
 	for _, sf := range subdomainScanResults {
 		structName := fmt.Sprintf("%T", sf)
@@ -83,7 +81,7 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 			csvData = append(csvData, []string{domain, subdomain.Address, subdomain.Type, subdomain.Source})
 		}
 
-		if configuration.HttpStatusCodeTest {
+		if lib.Config.HttpStatusCodeTest {
 			select {
 			case <-cancel:
 				// Scanner canceled, exit the loop
@@ -94,7 +92,7 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 				httpsStatusCode, err := helper.GetHttpStatusCode("https://" + domain)
 				if err == nil {
 					helper.ResultPrintf("    +- HTTPS status code: %s\n", httpsStatusCode)
-				} else if configuration.VerboseMode {
+				} else if lib.Config.VerboseMode {
 					helper.ResultPrintf("    +- HTTPS status code: ERR\n")
 				}
 
@@ -102,7 +100,7 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 				httpStatusCode, err := helper.GetHttpStatusCode("http://" + domain)
 				if err == nil {
 					helper.ResultPrintf("    +- HTTP status code: %s\n", httpStatusCode)
-				} else if configuration.VerboseMode {
+				} else if lib.Config.VerboseMode {
 					helper.ResultPrintf("    +- HTTP status code: ERR\n")
 				}
 			}
@@ -111,7 +109,7 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 	helper.InfoPrintln("<========================================================================================")
 	helper.InfoPrintln("[+] End of subdomains scan")
 
-	if !config.NoExport {
+	if !lib.Config.NoExport {
 		filename, err := helper.OutputCsv(csvData)
 		if err == nil {
 			helper.ResultPrintln("[+] Please find CSV file in", filename)

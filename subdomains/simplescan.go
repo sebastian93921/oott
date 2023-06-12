@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net"
 	"oott/helper"
+	"oott/lib"
 	"os"
 	"time"
 )
@@ -31,16 +32,16 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	timeout := 200 * time.Millisecond // Adjust timeout duration as needed
 	workerCount := 100                // Number of worker goroutines
 
-	if IsFastScan {
+	if lib.Config.IsFastScan {
 		timeout = 100 * time.Millisecond // Adjust timeout duration as needed
 	}
 
 	// Make sure the worker count cannot higher than the maximum threads
-	if ConcurrentRunningThread > workerCount {
-		workerCount = ConcurrentRunningThread
+	if lib.Config.ConcurrentRunningThread > workerCount {
+		workerCount = lib.Config.ConcurrentRunningThread
 	}
 
-	if VerboseMode {
+	if lib.Config.VerboseMode {
 		helper.VerbosePrintln("[-] Running simple scan with number of workers: ", workerCount)
 	}
 
@@ -103,7 +104,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 			break
 		default:
 			count++
-			if VerboseMode {
+			if lib.Config.VerboseMode {
 				helper.VerbosePrintf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
 			}
 			task := SubdomainTask{
@@ -163,7 +164,7 @@ func pickRandomDNSServers(dnsServers []string, count int) []string {
 }
 
 func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, dnsServers []string, timeout time.Duration) {
-	if VerboseMode {
+	if lib.Config.VerboseMode {
 		helper.VerbosePrintln("[-] Start on subdomain: ", subdomainTarget)
 	}
 	randomDnsServers := pickRandomDNSServers(dnsServers, 500)
@@ -190,7 +191,7 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 			addresses, err := resolver.LookupHost(ctx, subdomainTarget)
 			if err != nil {
 				/* DEBUG Only - Too many outputs
-				if VerboseMode {
+				if lib.Config.VerboseMode {
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						// DNS lookup timed out
 						helper.VerbosePrintf("[-] DNS lookup timed out for subdomain '%s' on DNS server %s\n", subdomainTarget, dnsServer)

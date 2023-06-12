@@ -6,6 +6,7 @@ import (
 	"syscall"
 
 	"oott/helper"
+	"oott/lib"
 )
 
 type SubDomainScanner interface {
@@ -28,10 +29,6 @@ var useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (K
 // Cancel Sign handling
 var cancel = make(chan struct{})
 
-var IsFastScan = false
-var VerboseMode = false
-var ConcurrentRunningThread = 500
-
 // Use `defer CloseInterruptHandler()` for housekeeping the signal
 func CreateInterruptHandler() {
 	// Create a channel to receive the interrupt signal
@@ -45,7 +42,7 @@ func CreateInterruptHandler() {
 	go func() {
 		// Wait for the interrupt signal
 		<-interrupt
-		if VerboseMode {
+		if lib.Config.VerboseMode {
 			helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
 		}
 		// Signal cancellation to stop the scanner
