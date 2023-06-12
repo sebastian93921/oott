@@ -9,18 +9,22 @@ import (
 	"oott/helper"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
 
 type Massdns struct {
-	ScannedSubdomains []SubDomainDetails
-	TargetDomain      string
-	FalsePositiveHost map[string]int
+	ScannedSubdomains     []SubDomainDetails
+	TargetDomain          string
+	FalsePositiveHost     map[string]int
+	NumberOfResolverCount int
 }
 
-var massdnsCommand = "massdns"
-var tmpfolder = "/tmp"
+var (
+	massdnsCommand = "massdns"
+	tmpfolder      = "/tmp"
+)
 
 func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	CreateInterruptHandler()
@@ -28,6 +32,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	helper.InfoPrintln("[+] Scanning subdomains on Massdns:", domain)
 	s.TargetDomain = domain
+	s.NumberOfResolverCount = ConcurrentRunningThread
 
 	wordlistFilePath := tmpfolder + "/subdomains-prefix.txt"
 	resolversFilePath := tmpfolder + "/dns-resolvers.txt"
@@ -285,7 +290,7 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 	helper.InfoPrintln("[+] Starting Subdomain scan for type", domaintype)
 
 	// Run a command
-	cmd := exec.Command(massdnsCommand, "-r", resolversFilePath, "-t", domaintype, "-s", "500", "-o", "J", "-q")
+	cmd := exec.Command(massdnsCommand, "-r", resolversFilePath, "-t", domaintype, "-s", strconv.Itoa(s.NumberOfResolverCount), "-o", "J", "-q")
 	// Create a concatenated string of the list elements
 	stronlyDomains := strings.Join(subdomains, "\n")
 

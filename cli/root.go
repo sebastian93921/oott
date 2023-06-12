@@ -10,12 +10,13 @@ import (
 )
 
 type Configuration struct {
-	Help               bool
-	IsFastScan         bool
-	SubdomainScan      bool
-	EmailScan          bool
-	VerboseMode        bool
-	HttpStatusCodeTest bool
+	Help                    bool
+	IsFastScan              bool
+	SubdomainScan           bool
+	EmailScan               bool
+	VerboseMode             bool
+	HttpStatusCodeTest      bool
+	ConcurrentRunningThread int
 }
 
 var config Configuration
@@ -23,12 +24,13 @@ var config Configuration
 var cancel = make(chan struct{})
 
 func Start() {
-	domain := flag.String("domain", "", "Domain to scan for subdomains")
-	flag.BoolVar(&config.Help, "help", false, "Show help")
-	flag.BoolVar(&config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain")
-	flag.BoolVar(&config.EmailScan, "email-scan", false, "Perform email scanning by target domain")
+	domain := flag.String("domain", "", "Domain to scan for subdomains.")
+	flag.BoolVar(&config.Help, "help", false, "Show help.")
+	flag.BoolVar(&config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain.")
+	flag.BoolVar(&config.EmailScan, "email-scan", false, "Perform email scanning by target domain.")
 	flag.BoolVar(&config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
-	flag.BoolVar(&config.HttpStatusCodeTest, "http-status-scan", false, "Get HTTP status code for each subdomain found")
+	flag.BoolVar(&config.HttpStatusCodeTest, "http-status-scan", false, "Get HTTP status code for each subdomain found.")
+	flag.IntVar(&config.ConcurrentRunningThread, "threads", 500, "Maximum number of Concurrent thread uses.")
 
 	flag.BoolVar(&config.VerboseMode, "verbose", false, "Enable verbose mode")
 	flag.Parse()
@@ -45,6 +47,10 @@ func Start() {
 		helper.ErrorPrintln("[!] Please provide the '-domain' argument")
 		flag.PrintDefaults()
 		os.Exit(1)
+	}
+
+	if config.VerboseMode {
+		helper.VerbosePrintln("[-] Verbose mode is enabled, resulting in more detailed console output.")
 	}
 
 	if config.SubdomainScan {

@@ -29,6 +29,7 @@ var cancel = make(chan struct{})
 
 var IsFastScan = false
 var VerboseMode = false
+var ConcurrentRunningThread = 500
 
 // Use `defer HousekeepInterruptHandler()` for housekeeping the signal
 func CreateInterruptHandler() {

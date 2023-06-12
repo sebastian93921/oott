@@ -35,6 +35,11 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		timeout = 100 * time.Millisecond // Adjust timeout duration as needed
 	}
 
+	// Make sure the worker count cannot higher than the maximum threads
+	if ConcurrentRunningThread > workerCount {
+		workerCount = ConcurrentRunningThread
+	}
+
 	// Download the file
 	err := downloadFile(wordlist, wordlistFilePath)
 	if err != nil {
