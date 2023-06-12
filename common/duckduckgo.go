@@ -65,7 +65,7 @@ func (s *DuckDuckGo) DuckDuckGoSearch(domain string) (string, error) {
 		results := string(body)
 		s.TotalResults += results
 
-		urls, err := s.Crawl(results)
+		urls, err := s.UrlSearch(results)
 		if err != nil {
 			helper.ErrorPrintln(err)
 			return "", err
@@ -83,15 +83,15 @@ func (s *DuckDuckGo) DuckDuckGoSearch(domain string) (string, error) {
 	return s.TotalResults, nil
 }
 
-func (s *DuckDuckGo) Crawl(text string) ([]string, error) {
+func (s *DuckDuckGo) UrlSearch(text string) ([]string, error) {
 	urls := []string{}
-	load := make(map[string]interface{})
-	err := json.Unmarshal([]byte(text), &load)
+	content := make(map[string]interface{})
+	err := json.Unmarshal([]byte(text), &content)
 	if err != nil {
 		return urls, err
 	}
 
-	for _, val := range load {
+	for _, val := range content {
 		switch v := val.(type) {
 		case int, map[string]interface{}, nil:
 			continue
@@ -99,6 +99,7 @@ func (s *DuckDuckGo) Crawl(text string) ([]string, error) {
 			if len(v) == 0 {
 				continue
 			}
+
 			dictVal := v[0]
 			if dictVal, ok := dictVal.(map[string]interface{}); ok {
 				for _, value := range dictVal {
@@ -114,6 +115,7 @@ func (s *DuckDuckGo) Crawl(text string) ([]string, error) {
 		}
 	}
 
+	// Remove Html tags
 	tmp := []string{}
 	for _, url := range urls {
 		if strings.Contains(url, "<") && strings.Contains(url, "href=") {
