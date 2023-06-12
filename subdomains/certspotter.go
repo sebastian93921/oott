@@ -14,7 +14,7 @@ type CertSpotter struct {
 }
 
 func (s *CertSpotter) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	helper.InfoPrintln("[+] Scanning subdomains on GoogleTransparency:", domain)
+	helper.InfoPrintln("[+] Scanning subdomains on CertSpotter:", domain)
 
 	results := []string{}
 	baseURL := "https://api.certspotter.com"
@@ -41,7 +41,7 @@ func (s *CertSpotter) ScanSubdomains(domain string) ([]SubDomainDetails, error) 
 			return nil, err
 		}
 
-		hostnames := parseResponse(string(body), domain)
+		hostnames := s.parseResponse(string(body), domain)
 		results = append(results, hostnames...)
 
 		nextLink = resp.Header.Get("Link")
@@ -51,10 +51,10 @@ func (s *CertSpotter) ScanSubdomains(domain string) ([]SubDomainDetails, error) 
 		}
 	}
 
-	return removeDuplicates(results), nil
+	return s.removeDuplicates(results), nil
 }
 
-func parseResponse(response string, domain string) []string {
+func (s *CertSpotter) parseResponse(response string, domain string) []string {
 	hostnameRegex := fmt.Sprintf(`([\w\d][\w\d\-\.]*\.%s)`, strings.ReplaceAll(domain, ".", "\\."))
 
 	hostnames := []string{}
@@ -66,7 +66,7 @@ func parseResponse(response string, domain string) []string {
 	return hostnames
 }
 
-func removeDuplicates(elements []string) []SubDomainDetails {
+func (s *CertSpotter) removeDuplicates(elements []string) []SubDomainDetails {
 	encountered := map[string]bool{}
 	var result []SubDomainDetails
 
