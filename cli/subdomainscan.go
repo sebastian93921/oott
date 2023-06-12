@@ -14,13 +14,13 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 	subdomains.IsFastScan = configuration.IsFastScan
 	subdomains.VerboseMode = configuration.VerboseMode
 	subdomainScanResults := []subdomains.SubDomainScanner{
-		// &subdomains.Hackertarget{}, // Has max API Limit
-		// &subdomains.Leakix{},
-		// &subdomains.Alienvault{},
-		// &subdomains.Archiveorg{},
-		// &subdomains.Rapiddns{},
-		// // &subdomains.Threatminer{},
-		// &subdomains.Urlscan{},
+		&subdomains.Hackertarget{}, // Has max API Limit
+		&subdomains.Leakix{},
+		&subdomains.Alienvault{},
+		&subdomains.Archiveorg{},
+		&subdomains.Rapiddns{},
+		// &subdomains.Threatminer{},
+		&subdomains.Urlscan{},
 		&subdomains.Massdns{}, // Wildcard subdomain issue
 		&subdomains.SimpleScan{},
 		// Add more SubDomainScanner implementations here
