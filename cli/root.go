@@ -19,9 +19,11 @@ type Configuration struct {
 	ConcurrentRunningThread int
 }
 
-var config Configuration
-
-var cancel = make(chan struct{})
+var (
+	config    Configuration
+	cancel    = make(chan struct{})
+	interrupt = make(chan os.Signal, 1)
+)
 
 func Start() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains.")
@@ -69,10 +71,9 @@ func Start() {
 	}
 }
 
-// Use `defer HousekeepInterruptHandler()` for housekeeping the signal
+// Use `defer CloseInterruptHandler()` for housekeeping the signal
 func CreateInterruptHandler() {
 	// Create a channel to receive the interrupt signal
-	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	// Create a channel to signal cancellation
@@ -86,12 +87,12 @@ func CreateInterruptHandler() {
 			helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
 		}
 		// Signal cancellation to stop the scanner
-		close(cancel)
+		CloseInterruptHandler()
 	}()
 
 }
 
-func HousekeepInterruptHandler() {
+func CloseInterruptHandler() {
 	select {
 	case _, ok := <-cancel:
 		if !ok {
@@ -99,5 +100,14 @@ func HousekeepInterruptHandler() {
 		}
 	default:
 		close(cancel)
+	}
+
+	select {
+	case _, ok := <-interrupt:
+		if !ok {
+			return
+		}
+	default:
+		close(interrupt)
 	}
 }

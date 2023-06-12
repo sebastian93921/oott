@@ -31,7 +31,7 @@ var IsFastScan = false
 var VerboseMode = false
 var ConcurrentRunningThread = 500
 
-// Use `defer HousekeepInterruptHandler()` for housekeeping the signal
+// Use `defer CloseInterruptHandler()` for housekeeping the signal
 func CreateInterruptHandler() {
 	// Create a channel to receive the interrupt signal
 	interrupt := make(chan os.Signal, 1)
@@ -48,12 +48,12 @@ func CreateInterruptHandler() {
 			helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
 		}
 		// Signal cancellation to stop the scanner
-		close(cancel)
+		CloseInterruptHandler()
 	}()
 
 }
 
-func HousekeepInterruptHandler() {
+func CloseInterruptHandler() {
 	select {
 	case _, ok := <-cancel:
 		if !ok {

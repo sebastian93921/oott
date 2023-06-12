@@ -28,7 +28,7 @@ var (
 
 func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	CreateInterruptHandler()
-	defer HousekeepInterruptHandler()
+	defer CloseInterruptHandler()
 
 	helper.InfoPrintln("[+] Scanning subdomains on Massdns:", domain)
 	s.TargetDomain = domain

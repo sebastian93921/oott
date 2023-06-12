@@ -68,7 +68,7 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 
 	helper.InfoPrintln("========================================================================================>")
 	CreateInterruptHandler()
-	defer HousekeepInterruptHandler()
+	defer CloseInterruptHandler()
 
 	csvData := [][]string{
 		{"Domain", "Address", "Type", "Source"},
