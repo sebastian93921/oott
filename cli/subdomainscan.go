@@ -25,6 +25,7 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 		&subdomains.Massdns{}, // Wildcard subdomain issue
 		&subdomains.SimpleScan{},
 		&subdomains.CertSpotter{},
+		&subdomains.DuckDuckGo{},
 		// Add more SubDomainScanner implementations here
 	}
 
@@ -110,9 +111,11 @@ func StartSubDomainScan(configuration Configuration, domain string) []subdomains
 	helper.InfoPrintln("<========================================================================================")
 	helper.InfoPrintln("[+] End of subdomains scan")
 
-	filename, err := helper.OutputCsv(csvData)
-	if err == nil {
-		helper.ResultPrintln("[+] Please find CSV file in", filename)
+	if !config.NoExport {
+		filename, err := helper.OutputCsv(csvData)
+		if err == nil {
+			helper.ResultPrintln("[+] Please find CSV file in", filename)
+		}
 	}
 
 	return subdomainLists

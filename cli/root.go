@@ -17,6 +17,7 @@ type Configuration struct {
 	VerboseMode             bool
 	HttpStatusCodeTest      bool
 	ConcurrentRunningThread int
+	NoExport                bool
 }
 
 var (
@@ -34,6 +35,7 @@ func Start() {
 	flag.BoolVar(&config.EmailScan, "email-scan", false, "Perform email scanning by target domain.")
 	flag.BoolVar(&config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
 	flag.BoolVar(&config.HttpStatusCodeTest, "http-status-scan", false, "Get HTTP status code for each subdomain found.")
+	flag.BoolVar(&config.NoExport, "no-export", false, "Disable export CSV features.")
 
 	flag.IntVar(&config.ConcurrentRunningThread, "threads", 500, "Maximum number of Concurrent thread uses.")
 	flag.IntVar(&config.ConcurrentRunningThread, "t", 500, "Maximum number of Concurrent thread uses (shorthand).")

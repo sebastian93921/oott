@@ -23,6 +23,7 @@ type SubDomainDetails struct {
 var wordlist = "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-5000.txt"
 var wordlist_long = "https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/subdomains-top1million-20000.txt"
 var resolversUrl = "https://public-dns.info/nameservers.txt"
+var useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36"
 
 // Cancel Sign handling
 var cancel = make(chan struct{})
