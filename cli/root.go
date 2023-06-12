@@ -25,14 +25,19 @@ var cancel = make(chan struct{})
 
 func Start() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains.")
+	domain = flag.String("d", "", "Domain to scan for subdomains (shorthand).")
+
 	flag.BoolVar(&config.Help, "help", false, "Show help.")
 	flag.BoolVar(&config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain.")
 	flag.BoolVar(&config.EmailScan, "email-scan", false, "Perform email scanning by target domain.")
 	flag.BoolVar(&config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
 	flag.BoolVar(&config.HttpStatusCodeTest, "http-status-scan", false, "Get HTTP status code for each subdomain found.")
+
 	flag.IntVar(&config.ConcurrentRunningThread, "threads", 500, "Maximum number of Concurrent thread uses.")
+	flag.IntVar(&config.ConcurrentRunningThread, "t", 500, "Maximum number of Concurrent thread uses (shorthand).")
 
 	flag.BoolVar(&config.VerboseMode, "verbose", false, "Enable verbose mode")
+	flag.BoolVar(&config.VerboseMode, "v", false, "Enable verbose mode (shorthand)")
 	flag.Parse()
 
 	if config.Help {
