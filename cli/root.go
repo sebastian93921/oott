@@ -19,7 +19,8 @@ func Start() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains.")
 	flag.StringVar(domain, "d", "", "Domain to scan for subdomains (shorthand).")
 
-	flag.BoolVar(&lib.Config.Help, "help", false, "Show help.")
+	flag.BoolVar(&lib.Config.Help, "help h", false, "Show help.")
+	flag.BoolVar(&lib.Config.Help, "h", false, "Show help. (shorthand)")
 	flag.BoolVar(&lib.Config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain.")
 	flag.BoolVar(&lib.Config.EmailScan, "email-scan", false, "Perform email scanning by target domain.")
 	flag.BoolVar(&lib.Config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
