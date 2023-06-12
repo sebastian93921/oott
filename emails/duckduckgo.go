@@ -1,4 +1,4 @@
-package subdomains
+package emails
 
 import (
 	"html"
@@ -12,8 +12,8 @@ import (
 type DuckDuckGo struct {
 }
 
-func (s *DuckDuckGo) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
-	helper.InfoPrintln("[+] Scanning subdomains on DuckDuckGo:", domain)
+func (s *DuckDuckGo) ScanEmails(domain string) ([]EmailDetails, error) {
+	helper.InfoPrintln("[+] Scanning emails on DuckDuckGo:", domain)
 
 	totalResults, err := common.DuckDuckGoSearch(domain, lib.Config.Useragent)
 	if err != nil {
@@ -21,9 +21,9 @@ func (s *DuckDuckGo) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, err
 	}
 
-	elements := s.extractURLsFromText(totalResults)
+	elements := s.extractEmailsFromText(totalResults)
 	encountered := map[string]bool{}
-	var result []SubDomainDetails
+	var result []EmailDetails
 	for v := range elements {
 		if encountered[elements[v]] == true {
 			continue
@@ -32,13 +32,9 @@ func (s *DuckDuckGo) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		encountered[elements[v]] = true
 
 		if strings.Contains(elements[v], domain) {
-			// Remove "https://" or "http://" prefix
-			domainname := strings.TrimPrefix(elements[v], "https://")
-			domainname = strings.TrimPrefix(domainname, "http://")
-
-			subdomain := SubDomainDetails{
-				DomainName: domainname,
-				Source:     "DuckDuckGo",
+			subdomain := EmailDetails{
+				Email:  elements[v],
+				Source: "DuckDuckGo",
 			}
 			result = append(result, subdomain)
 		}
@@ -47,7 +43,7 @@ func (s *DuckDuckGo) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	return result, nil
 }
 
-func (s *DuckDuckGo) extractURLsFromText(text string) []string {
+func (s *DuckDuckGo) extractEmailsFromText(text string) []string {
 	// Remove escape characters
 	text = html.UnescapeString(text)
 
@@ -58,11 +54,11 @@ func (s *DuckDuckGo) extractURLsFromText(text string) []string {
 	// Remove backslash characters
 	text = strings.ReplaceAll(text, "\\", "")
 
-	// Regular expression pattern to match URLs
-	urlPattern := `https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+`
+	// Regular expression pattern to match email
+	emailPattern := `\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b`
 
 	// Compile the regular expression pattern
-	re := regexp.MustCompile(urlPattern)
+	re := regexp.MustCompile(emailPattern)
 
 	// Find all matches in the input text
 	matches := re.FindAllString(text, -1)
