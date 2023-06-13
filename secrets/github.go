@@ -79,6 +79,9 @@ func (s *Github) startSearchByKeywords(keywords []string, searchPatterns map[str
 	for _, keyword := range keywords {
 		helper.InfoPrintln("[+] Start searching with keyword:", keyword)
 		githubRepos := common.SearchGithubRepoByKeyword(keyword)
+		if githubRepos == nil {
+			return nil
+		}
 
 		for _, repo := range githubRepos {
 			result := s.searchCodeFromGithubRepo(repo, searchPatterns)
@@ -106,6 +109,7 @@ func (s *Github) searchCodeFromGithubRepo(item common.GithubRepo, searchPatterns
 		regex := regexp.MustCompile(value)
 		for lineNum, line := range lines {
 			lineNumber := lineNum + 1
+			line = strings.TrimSpace(line) // Trim it first
 			if regex.MatchString(line) {
 				helper.InfoPrintf("[+] Repository: %-20s Path: %s\n", repository, path)
 				helper.InfoPrintf("[+] Pattern found: %s\n", key)

@@ -16,6 +16,9 @@ func (ef *Github) ScanEmails(domain string) ([]EmailDetails, error) {
 	helper.InfoPrintln("[+] Scanning emails on Github:", domain)
 
 	githubRepos := common.SearchGithubRepoByKeyword(domain)
+	if githubRepos == nil {
+		return nil, nil
+	}
 
 	var emails []string
 	for _, repo := range githubRepos {

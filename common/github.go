@@ -30,6 +30,8 @@ func SearchGithubRepoByKeyword(keywords string) []GithubRepo {
 	if lib.Config.GitHubAPIToken == "" || len(lib.Config.GitHubAPIToken) <= 0 {
 		helper.ErrorPrintln("[!] No personal access token provided. Process can not be proceed...")
 		helper.ErrorPrintln("[!] Please go to https://github.com/settings/tokens to create one, no any permission needed.")
+		helper.ErrorPrintln("Press Enter to continue...")
+		fmt.Scanln()
 		return nil
 	}
 
