@@ -104,6 +104,10 @@ func (s *Github) searchCodeFromGithubRepo(item common.GithubRepo, searchPatterns
 
 	lines := strings.Split(rawContent, "\n")
 
+	return s.searchSecretsByPattern(lines, repository, path, htmlURL, searchPatterns)
+}
+
+func (s *Github) searchSecretsByPattern(lines []string, repository string, path string, htmlURL string, searchPatterns map[string]string) []SecretDetails {
 	var secrests []SecretDetails
 	for key, value := range searchPatterns {
 		regex := regexp.MustCompile(value)
