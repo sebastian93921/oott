@@ -65,7 +65,7 @@ func TestGithub_searchSecretsByPattern_SingleMatch(t *testing.T) {
 			s:    &Github{},
 			args: args{
 				lines: []string{
-					"url = \"https://api.bamboohr.com/api/gateway.php/cxzvxwfew/v1/reports/\"+report_id+\"?format=csv&onlyCurrent=false\"",
+					"url = \"https://api.testtest.com/api/gateway.php/cxzvxwfew/v1/reports/\"+report_id+\"?format=csv&onlyCurrent=false\"",
 					"",
 					"headers = {\"authorization\": \"Basic HUIDXN32432jodsna18923uofdsfd5435fdsfsASDs=\"}",
 				},
@@ -81,11 +81,26 @@ func TestGithub_searchSecretsByPattern_SingleMatch(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Test case - false positive aws token",
+			s:    &Github{},
+			args: args{
+				lines: []string{
+					"##===========================================================================================================",
+					"# 					Test test test test  ",
+				},
+				repository:     "example/repo",
+				path:           "/path/to/file",
+				htmlURL:        "exmaple/repo",
+				searchPatterns: keyAndRegex,
+			},
+			want: []SecretDetails{},
+		},
 		// Add more test cases as needed
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.s.searchSecretsByPattern(tt.args.lines, tt.args.repository, tt.args.path, tt.args.htmlURL, tt.args.searchPatterns); len(got) != 1 {
+			if got := tt.s.searchSecretsByPattern(tt.args.lines, tt.args.repository, tt.args.path, tt.args.htmlURL, tt.args.searchPatterns); len(got) != len(tt.want) {
 				t.Errorf("Github.searchSecretsByPattern() = %v, want %v", got, tt.want)
 			}
 		})
