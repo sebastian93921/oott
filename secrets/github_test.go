@@ -67,7 +67,7 @@ func TestGithub_searchSecretsByPattern_SingleMatch(t *testing.T) {
 				lines: []string{
 					"url = \"https://api.testtest.com/api/gateway.php/cxzvxwfew/v1/reports/\"+report_id+\"?format=csv&onlyCurrent=false\"",
 					"",
-					"headers = {\"authorization\": \"Basic HUIDXN32432jodsna18923uofdsfd5435fdsfsASDs=\"}",
+					"headers = {\"authorization\": \"Basic AQENVg688MSGlEgdOJpjIUC=\"}",
 				},
 				repository:     "example/repo",
 				path:           "/path/to/file",
@@ -77,7 +77,7 @@ func TestGithub_searchSecretsByPattern_SingleMatch(t *testing.T) {
 			want: []SecretDetails{
 				{
 					PatternName: "GitHub Token",
-					Content:     "headers = {\"authorization\": \"Basic HUIDXN32432jodsna18923uofdsfd5435fdsfsASDs=\"}",
+					Content:     "headers = {\"authorization\": \"Basic AQENVg688MSGlEgdOJpjIUC=\"}",
 				},
 			},
 		},
