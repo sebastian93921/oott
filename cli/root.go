@@ -23,6 +23,7 @@ func Start() {
 	flag.BoolVar(&lib.Config.Help, "h", false, "Show help. (shorthand)")
 	flag.BoolVar(&lib.Config.SubdomainScan, "subdomain-scan", false, "Perform subdomain scanning by target domain.")
 	flag.BoolVar(&lib.Config.EmailScan, "email-scan", false, "Perform email scanning by target domain.")
+	flag.BoolVar(&lib.Config.SecretScan, "secret-scan", false, "Perform secrets scanning by domain name.")
 	flag.BoolVar(&lib.Config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
 	flag.BoolVar(&lib.Config.HttpStatusCodeTest, "http-status-scan", false, "Get HTTP status code for each subdomain found.")
 	flag.BoolVar(&lib.Config.NoExport, "no-export", false, "Disable export CSV features.")
@@ -48,6 +49,9 @@ func Start() {
 		os.Exit(1)
 	}
 
+	// Read config file
+	helper.ReadConfigFile()
+
 	if lib.Config.VerboseMode {
 		helper.VerbosePrintln("[-] Verbose mode is enabled, resulting in more detailed console output.")
 	}
@@ -60,6 +64,11 @@ func Start() {
 	if lib.Config.EmailScan {
 		// Return email list
 		_ = StartEmailScan(*domain)
+	}
+
+	if lib.Config.SecretScan {
+		// Return secrets if possible
+		_ = StartSecretScan(*domain)
 	}
 }
 

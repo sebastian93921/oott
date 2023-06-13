@@ -16,6 +16,7 @@ func StartEmailScan(domain string) []emails.EmailDetails {
 		&emails.EmailFormat{},
 		&emails.PGPScan{},
 		&emails.DuckDuckGo{},
+		&emails.Github{},
 		// Add more EmailScanner implementations here
 	}
 
