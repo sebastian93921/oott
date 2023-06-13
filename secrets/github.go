@@ -61,15 +61,31 @@ func (s *Github) ScanSecrets(domain string) ([]SecretDetails, error) {
 		}
 	}
 
-	githubRepos := common.SearchGithubRepoByKeyword(domain)
+	var keywords = []string{domain}
 
-	var secretDetails []SecretDetails
-	for _, repo := range githubRepos {
-		result := s.searchCodeFromGithubRepo(repo, keyAndRegex)
-		secretDetails = append(secretDetails, result...)
+	if lib.Config.SearchKeywords != "" && len(lib.Config.SearchKeywords) >= 0 {
+		tempkeywords := strings.Split(lib.Config.SearchKeywords, ",")
+		keywords = append(keywords, tempkeywords...)
+		helper.InfoPrintln("[+] Secrets search with keywords: ", keywords)
 	}
 
+	secretDetails := s.startSearchByKeywords(keywords, keyAndRegex)
+
 	return secretDetails, nil
+}
+
+func (s *Github) startSearchByKeywords(keywords []string, searchPatterns map[string]string) []SecretDetails {
+	var secretDetails []SecretDetails
+	for _, keyword := range keywords {
+		helper.InfoPrintln("[+] Start searching with keyword:", keyword)
+		githubRepos := common.SearchGithubRepoByKeyword(keyword)
+
+		for _, repo := range githubRepos {
+			result := s.searchCodeFromGithubRepo(repo, searchPatterns)
+			secretDetails = append(secretDetails, result...)
+		}
+	}
+	return secretDetails
 }
 
 func (s *Github) searchCodeFromGithubRepo(item common.GithubRepo, searchPatterns map[string]string) []SecretDetails {

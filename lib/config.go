@@ -5,13 +5,14 @@ type Configuration struct {
 	IsFastScan              bool
 	SubdomainScan           bool
 	EmailScan               bool
-	SecretScan              bool
 	VerboseMode             bool
 	HttpStatusCodeTest      bool
 	ConcurrentRunningThread int
 	NoExport                bool
 	Useragent               string
 
+	SecretScan     bool
+	SearchKeywords string
 	GitHubAPIToken string
 }
 
