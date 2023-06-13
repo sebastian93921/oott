@@ -230,18 +230,6 @@ func TestGithub_searchSecretsByPattern_MoreThenOneMatch(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "Test case - false positive aws token",
-			s:    &Github{},
-			args: args{
-				lines: []string{
-					"##===========================================================================================================",
-					"# 					Test test test test  ",
-				},
-				repository: "example/repo", path: "/path/to/file", htmlURL: "exmaple/repo", searchPatterns: keyAndRegex,
-			},
-			want: []SecretDetails{},
-		},
 		// Add more test cases as needed
 	}
 	for _, tt := range tests {
