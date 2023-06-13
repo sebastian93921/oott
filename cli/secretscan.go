@@ -54,8 +54,12 @@ func StartSecretScan(domain string) []secrets.SecretDetails {
 	for patternName, details := range groupedData {
 		helper.ResultPrintf("Pattern Name: %s\n", patternName)
 		for _, detail := range details {
+			maxContentLength := 80
+			if len(detail.Content) > maxContentLength {
+				detail.Content = detail.Content[:maxContentLength]
+			}
 			helper.ResultPrintf("  +- Content Source: %-40s Source: %s \n", detail.ContentSource, detail.Source)
-			helper.ResultPrintf("    +- Content: %s \n", detail.Content[0:80])
+			helper.ResultPrintf("    +- Content: %s \n")
 		}
 	}
 	helper.InfoPrintln("<========================================================================================")
