@@ -16,11 +16,14 @@ var (
 )
 
 func printBanner() {
-	helper.VerbosePrintln("OOTT - OSINT Offensive Toolkit")
 	helper.VerbosePrintln("========================================================================================>")
+	helper.VerbosePrintln("OOTT - OSINT Offensive Toolkit")
+	helper.VerbosePrintln("<========================================================================================")
 }
 
 func Start() {
+	printBanner()
+
 	domain := flag.String("domain", "", "Domain to scan for subdomains.")
 	flag.StringVar(domain, "d", "", "Domain to scan for subdomains (shorthand).")
 
