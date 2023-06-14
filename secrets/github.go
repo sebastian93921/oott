@@ -1,7 +1,6 @@
 package secrets
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -29,9 +28,6 @@ type GithubRepo struct {
 type Response struct {
 	Items []GithubRepo `json:"items"`
 }
-
-//go:embed secretpatterns.json
-var secretpatternsEmbed embed.FS
 
 func (s *Github) ScanSecrets(domain string) ([]SecretDetails, error) {
 	helper.InfoPrintln("[+] Scanning subdomains on Github:", domain)
