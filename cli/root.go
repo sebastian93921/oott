@@ -15,6 +15,11 @@ var (
 	interrupt = make(chan os.Signal, 1)
 )
 
+func printBanner() {
+	helper.VerbosePrintln("OOTT - OSINT Offensive Toolkit")
+	helper.VerbosePrintln("========================================================================================>")
+}
+
 func Start() {
 	domain := flag.String("domain", "", "Domain to scan for subdomains.")
 	flag.StringVar(domain, "d", "", "Domain to scan for subdomains (shorthand).")
