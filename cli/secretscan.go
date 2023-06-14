@@ -59,7 +59,7 @@ func StartSecretScan(domain string) []secrets.SecretDetails {
 				detail.Content = detail.Content[:maxContentLength]
 			}
 			helper.ResultPrintf("  +- Content Source: %-40s Source: %s \n", detail.ContentSource, detail.Source)
-			helper.ResultPrintf("    +- Content: %s \n", detail.Content)
+			helper.InfoPrintf("    +- Content: %s \n", detail.Content)
 		}
 	}
 	helper.InfoPrintln("<========================================================================================")
