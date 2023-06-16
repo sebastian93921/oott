@@ -61,6 +61,7 @@ func Start() {
 
 	// Read config file
 	helper.ReadConfigFile()
+	helper.ReadFilteringListFile()
 
 	if lib.Config.VerboseMode {
 		helper.VerbosePrintln("[-] Verbose mode is enabled, resulting in more detailed console output.")
@@ -80,6 +81,9 @@ func Start() {
 		// Return secrets if possible
 		_ = StartSecretScan(*domain)
 	}
+
+	helper.InfoPrintln("[+] Please add generated hashes to the filtering list (filter.txt) to filter out the result for next time.")
+	helper.InfoPrintln("[+] For email, just add the email to the filtering list (filter.txt).")
 }
 
 // Use `defer CloseInterruptHandler()` for housekeeping the signal
@@ -95,7 +99,7 @@ func CreateInterruptHandler() {
 		// Wait for the interrupt signal
 		<-interrupt
 		if lib.Config.VerboseMode {
-			helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
+			helper.ErrorPrintln("\n[!] Receive interrupt signal")
 		}
 		// Signal cancellation to stop the scanner
 		CloseInterruptHandler()

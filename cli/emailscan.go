@@ -57,10 +57,17 @@ func StartEmailScan(domain string) []emails.EmailDetails {
 
 	// Convert map to slice
 	for email, source := range emailMap {
-		emailLists = append(emailLists, emails.EmailDetails{
-			Email:  email,
-			Source: source,
-		})
+		// Filtering
+		if !lib.FilteringList[email] {
+			emailLists = append(emailLists, emails.EmailDetails{
+				Email:  email,
+				Source: source,
+			})
+		} else {
+			if lib.Config.VerboseMode {
+				helper.VerbosePrintln("[-] Input matches a hash from the filtering list:", email)
+			}
+		}
 	}
 
 	helper.InfoPrintln("========================================================================================>")

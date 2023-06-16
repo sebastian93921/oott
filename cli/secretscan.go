@@ -39,7 +39,15 @@ func StartSecretScan(domain string) []secrets.SecretDetails {
 		}
 
 		for _, result := range secretResults {
-			secretsLists = append(secretsLists, result)
+			// Filtering
+			hashString := helper.CalculateHash(result.ContentSource)
+			if !lib.FilteringList[hashString] {
+				secretsLists = append(secretsLists, result)
+			} else {
+				if lib.Config.VerboseMode {
+					helper.VerbosePrintln("[-] Input matches a hash from the filtering list:", result.ContentSource)
+				}
+			}
 		}
 	}
 
@@ -52,14 +60,16 @@ func StartSecretScan(domain string) []secrets.SecretDetails {
 
 	// Print grouped data
 	for patternName, details := range groupedData {
-		helper.ResultPrintf("Pattern Name: %s\n", patternName)
+		helper.InfoPrintf("Pattern Name: %s\n", patternName)
 		for _, detail := range details {
 			maxContentLength := 80
+			hashString := helper.CalculateHash(detail.ContentSource)
 			if len(detail.Content) > maxContentLength {
 				detail.Content = detail.Content[:maxContentLength]
 			}
 			helper.ResultPrintf("  +- Content Source: %-40s Source: %s \n", detail.ContentSource, detail.Source)
 			helper.InfoPrintf("    +- Content: %s \n", detail.Content)
+			helper.ResultPrintf("      +- SHA256: %s \n", hashString)
 		}
 	}
 	helper.InfoPrintln("<========================================================================================")

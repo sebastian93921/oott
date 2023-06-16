@@ -107,7 +107,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 			for range ticker.C {
 				if lib.Config.VerboseMode {
-					helper.VerbosePrintln("[-] Generating combination of prefix, please wait... %d/%d\n", combinationsGenerated, totalCombinations)
+					helper.VerbosePrintf("[-] Generating combination of prefix, please wait... %d/%d\n", combinationsGenerated, totalCombinations)
 				}
 				if generateProcessFinished {
 					return

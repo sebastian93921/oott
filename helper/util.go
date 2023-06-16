@@ -1,7 +1,11 @@
 package helper
 
 import (
+	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"oott/lib"
 	"os"
@@ -62,4 +66,47 @@ func ReadConfigFile() {
 
 	// Map the value
 	lib.Config.GitHubAPIToken = tempConfig.GitHubAPIToken
+}
+
+func ReadFilteringListFile() {
+	filteringListFile := "filtering.txt"
+
+	// Check if the filtering list file exists
+	_, err := os.Stat(filteringListFile)
+	if os.IsNotExist(err) {
+		// Create an empty filtering list file
+		_, err := os.Create(filteringListFile)
+		if err != nil {
+			fmt.Println("[!] Error creating filtering file:", err)
+			return
+		}
+		InfoPrintln("[+] Created an empty filtering file. Please edit add filtering Hashes to the file.")
+	}
+
+	file, err := os.OpenFile(filteringListFile, os.O_RDWR|os.O_APPEND, 0666)
+	if err != nil {
+		ErrorPrintln("[!] Failed to open the file:", err)
+		return
+	}
+	defer file.Close()
+
+	// Read the file line by line
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Add the hash value to the filtering list
+		lib.FilteringList[line] = true
+	}
+
+	if lib.Config.VerboseMode {
+		VerbosePrintln("[-] Filtering list defined:", lib.FilteringList)
+	}
+}
+
+func CalculateHash(input string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(input))
+	hash := hex.EncodeToString(hasher.Sum(nil))
+	return hash
 }

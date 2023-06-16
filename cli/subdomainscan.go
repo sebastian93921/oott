@@ -50,8 +50,14 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 		}
 
 		for _, subdomain := range subdomains {
-			if subdomain.DomainName != "" {
+			// Filtering
+			hashString := helper.CalculateHash(subdomain.DomainName)
+			if !lib.FilteringList[hashString] && subdomain.DomainName != "" {
 				subdomainLists = append(subdomainLists, subdomain)
+			} else {
+				if lib.Config.VerboseMode {
+					helper.VerbosePrintln("[-] Input matches a hash from the filtering list:", subdomain.DomainName)
+				}
 			}
 		}
 
@@ -75,9 +81,11 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 	}
 
 	for domain, results := range groupedResults {
-		helper.ResultPrintln("Domain:", domain)
+		helper.InfoPrintf("Domain:", domain)
+		hashString := helper.CalculateHash(domain)
+		helper.ResultPrintf("  +- SHA256: %s \n", hashString)
 		for _, subdomain := range results {
-			helper.ResultPrintf("  +- Address: %-40s Type: %-10s Source: %s\n", subdomain.Address, subdomain.Type, subdomain.Source)
+			helper.ResultPrintf("    +- Address: %-40s Type: %-10s Source: %s\n", subdomain.Address, subdomain.Type, subdomain.Source)
 			csvData = append(csvData, []string{domain, subdomain.Address, subdomain.Type, subdomain.Source})
 		}
 
@@ -91,17 +99,17 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 				// HTTPS
 				httpsStatusCode, err := helper.GetHttpStatusCode("https://" + domain)
 				if err == nil {
-					helper.ResultPrintf("    +- HTTPS status code: %s\n", httpsStatusCode)
+					helper.ResultPrintf("      +- HTTPS status code: %s\n", httpsStatusCode)
 				} else if lib.Config.VerboseMode {
-					helper.ResultPrintf("    +- HTTPS status code: ERR\n")
+					helper.ResultPrintf("      +- HTTPS status code: ERR\n")
 				}
 
 				// HTTP
 				httpStatusCode, err := helper.GetHttpStatusCode("http://" + domain)
 				if err == nil {
-					helper.ResultPrintf("    +- HTTP status code: %s\n", httpStatusCode)
+					helper.ResultPrintf("      +- HTTP status code: %s\n", httpStatusCode)
 				} else if lib.Config.VerboseMode {
-					helper.ResultPrintf("    +- HTTP status code: ERR\n")
+					helper.ResultPrintf("      +- HTTP status code: ERR\n")
 				}
 			}
 		}
