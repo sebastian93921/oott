@@ -81,7 +81,7 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 	}
 
 	for domain, results := range groupedResults {
-		helper.InfoPrintf("Domain:", domain)
+		helper.InfoPrintln("Domain:", domain)
 		hashString := helper.CalculateHash(domain)
 		helper.ResultPrintf("  +- SHA256: %s \n", hashString)
 		for _, subdomain := range results {
