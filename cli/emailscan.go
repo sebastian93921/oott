@@ -65,7 +65,7 @@ func StartEmailScan(domain string) []emails.EmailDetails {
 			})
 		} else {
 			if lib.Config.VerboseMode {
-				helper.VerbosePrintln("[-] Input matches a hash from the filtering list:", email)
+				helper.VerbosePrintln("[-] Input matches from the filtering list:", email)
 			}
 		}
 	}
