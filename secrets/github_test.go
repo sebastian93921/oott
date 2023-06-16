@@ -23,6 +23,52 @@ func testReadSecretPatterns() map[string]string {
 	return keyAndRegex
 }
 
+func TestGithub_searchSecretsByPattern_Test(t *testing.T) {
+	keyAndRegex := testReadSecretPatterns()
+	type args struct {
+		lines          []string
+		repository     string
+		path           string
+		htmlURL        string
+		searchPatterns map[string]string
+	}
+
+	tests := []struct {
+		name string
+		s    *Github
+		args args
+		want []SecretDetails
+	}{
+		{
+			name: "Test case - private pgp key",
+			s:    &Github{},
+			args: args{
+				lines: []string{
+					"APPLE_CLIENT_ID=com.vaib.only.web",
+					"APPLE_TEAM_ID=XF5KBAKJ2F",
+					"APPLE_KEY_ID=NCHD3VR2V6",
+					"APPLE_KEY=-----BEGIN PGP PRIVATE KEY BLOCK-----\nMIGTAgEAMBMGByqbgtgtbAgEGCCqGSM49AwEHBHkwdwIBAQQgCSc1wF+mLoQ3wk3y\nW/JvBMB6Z2q1uQn3pSEnmAXF8HzzCgYIKoZIzj0DAQehRANCAASb+bW9Ohikp+ra\njOswnXE/wMezc46Lg8q085s4qjlZrnHELYZSVuzz/Xuh8h6Cn5f2szz9os4OO3Bt\nP37NIwJn\n-----END PGP PRIVATE KEY BLOCK-----",
+					"APPLE_CALLBACK_URL=https://dev-gateway.ovstg.click/auth/apple/callback",
+				},
+				repository: "example/repo", path: "/path/to/file", htmlURL: "exmaple/repo", searchPatterns: keyAndRegex,
+			},
+			want: []SecretDetails{
+				{
+					PatternName: "GitHub Token",
+					Content:     "APPLE_KEY=-----BEGIN PGP PRIVATE KEY BLOCK-----\nMIGTAgEAMBMGByqbgtgtbAgEGCCqGSM49AwEHBHkwdwIBAQQgCSc1wF+mLoQ3wk3y\nW/JvBMB6Z2q1uQn3pSEnmAXF8HzzCgYIKoZIzj0DAQehRANCAASb+bW9Ohikp+ra\njOswnXE/wMezc46Lg8q085s4qjlZrnHELYZSVuzz/Xuh8h6Cn5f2szz9os4OO3Bt\nP37NIwJn\n-----END PGP PRIVATE KEY BLOCK-----",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.s.searchSecretsByPattern(tt.args.lines, tt.args.repository, tt.args.path, tt.args.htmlURL, tt.args.searchPatterns); len(got) != len(tt.want) {
+				t.Errorf("Github.searchSecretsByPattern() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestGithub_searchSecretsByPattern_SingleMatch(t *testing.T) {
 	keyAndRegex := testReadSecretPatterns()
 	type args struct {
@@ -114,6 +160,67 @@ func TestGithub_searchSecretsByPattern_SingleMatch(t *testing.T) {
 				{
 					PatternName: "Bearer Authentication Token",
 					Content:     "'Authorization': f'Bearer eyJhbGciOiJIUzI1NiasInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI5YjQ2MDY0MC1bfwIyLTQzY2YtOGM3Ni0xYjQyZGVjNTU5NjQiLCJpYXQiOjE2ODY2NTAwMDQsImV4cCI6MTY4NjczNjQwNH0.DIkikc6lQigHFBxdfdbWLmsJwMnxr4hLJtKB9I-UHpE'",
+				},
+			},
+		},
+		{
+			name: "Test case - secret",
+			s:    &Github{},
+			args: args{
+				lines: []string{
+					"JwtModule.register({",
+					"	global: true,",
+					"	// secret: jwtConstants.secret,",
+					"	secret: 'NarwhalxxxpiBinturongWoollyMaxxxthThylacinePangolin',",
+					"	signOptions: { expiresIn: JWT_EXPIRES_IN },",
+					"}),",
+				},
+				repository: "example/repo", path: "/path/to/file", htmlURL: "exmaple/repo", searchPatterns: keyAndRegex,
+			},
+			want: []SecretDetails{
+				{
+					PatternName: "Bearer Authentication Token",
+					Content:     "secret: 'NarwhalxxxpiBinturongWoollyMaxxxthThylacinePangolin',",
+				},
+			},
+		},
+		{
+			name: "Test case - private key",
+			s:    &Github{},
+			args: args{
+				lines: []string{
+					"APPLE_CLIENT_ID=com.vaib.only.web",
+					"APPLE_TEAM_ID=XF5KBAKJ2F",
+					"APPLE_KEY_ID=NCHD3VR2V6",
+					"APPLE_KEY=-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqbgtgtbAgEGCCqGSM49AwEHBHkwdwIBAQQgCSc1wF+mLoQ3wk3y\nW/JvBMB6Z2q1uQn3pSEnmAXF8HzzCgYIKoZIzj0DAQehRANCAASb+bW9Ohikp+ra\njOswnXE/wMezc46Lg8q085s4qjlZrnHELYZSVuzz/Xuh8h6Cn5f2szz9os4OO3Bt\nP37NIwJn\n-----END PRIVATE KEY-----",
+					"APPLE_CALLBACK_URL=https://dev-gateway.ovstg.click/auth/apple/callback",
+				},
+				repository: "example/repo", path: "/path/to/file", htmlURL: "exmaple/repo", searchPatterns: keyAndRegex,
+			},
+			want: []SecretDetails{
+				{
+					PatternName: "GitHub Token",
+					Content:     "APPLE_KEY=-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqbgtgtbAgEGCCqGSM49AwEHBHkwdwIBAQQgCSc1wF+mLoQ3wk3y\nW/JvBMB6Z2q1uQn3pSEnmAXF8HzzCgYIKoZIzj0DAQehRANCAASb+bW9Ohikp+ra\njOswnXE/wMezc46Lg8q085s4qjlZrnHELYZSVuzz/Xuh8h6Cn5f2szz9os4OO3Bt\nP37NIwJn\n-----END PRIVATE KEY-----",
+				},
+			},
+		},
+		{
+			name: "Test case - private pgp key",
+			s:    &Github{},
+			args: args{
+				lines: []string{
+					"APPLE_CLIENT_ID=com.vaib.only.web",
+					"APPLE_TEAM_ID=XF5KBAKJ2F",
+					"APPLE_KEY_ID=NCHD3VR2V6",
+					"APPLE_KEY=-----BEGIN PGP PRIVATE KEY BLOCK-----\nMIGTAgEAMBMGByqbgtgtbAgEGCCqGSM49AwEHBHkwdwIBAQQgCSc1wF+mLoQ3wk3y\nW/JvBMB6Z2q1uQn3pSEnmAXF8HzzCgYIKoZIzj0DAQehRANCAASb+bW9Ohikp+ra\njOswnXE/wMezc46Lg8q085s4qjlZrnHELYZSVuzz/Xuh8h6Cn5f2szz9os4OO3Bt\nP37NIwJn\n-----END PGP PRIVATE KEY BLOCK-----",
+					"APPLE_CALLBACK_URL=https://dev-gateway.ovstg.click/auth/apple/callback",
+				},
+				repository: "example/repo", path: "/path/to/file", htmlURL: "exmaple/repo", searchPatterns: keyAndRegex,
+			},
+			want: []SecretDetails{
+				{
+					PatternName: "GitHub Token",
+					Content:     "APPLE_KEY=-----BEGIN PGP PRIVATE KEY BLOCK-----\nMIGTAgEAMBMGByqbgtgtbAgEGCCqGSM49AwEHBHkwdwIBAQQgCSc1wF+mLoQ3wk3y\nW/JvBMB6Z2q1uQn3pSEnmAXF8HzzCgYIKoZIzj0DAQehRANCAASb+bW9Ohikp+ra\njOswnXE/wMezc46Lg8q085s4qjlZrnHELYZSVuzz/Xuh8h6Cn5f2szz9os4OO3Bt\nP37NIwJn\n-----END PGP PRIVATE KEY BLOCK-----",
 				},
 			},
 		},
