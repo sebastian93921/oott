@@ -77,7 +77,7 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 	defer CloseInterruptHandler()
 
 	csvData := [][]string{
-		{"Domain", "Address", "Type", "Source"},
+		{"Domain", "Address", "Type", "Source", "SHA256"},
 	}
 
 	for domain, results := range groupedResults {
@@ -86,7 +86,7 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 		helper.ResultPrintf("  +- SHA256: %s \n", hashString)
 		for _, subdomain := range results {
 			helper.ResultPrintf("    +- Address: %-40s Type: %-10s Source: %s\n", subdomain.Address, subdomain.Type, subdomain.Source)
-			csvData = append(csvData, []string{domain, subdomain.Address, subdomain.Type, subdomain.Source})
+			csvData = append(csvData, []string{domain, subdomain.Address, subdomain.Type, subdomain.Source, hashString})
 		}
 
 		if lib.Config.HttpStatusCodeTest {
