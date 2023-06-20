@@ -21,6 +21,7 @@ import (
 type Technology struct {
 	Cats        []int             `json:"cats"`
 	Description string            `json:"description"`
+	Headers     map[string]string `json:"headers"`
 	HTML        interface{}       `json:"html"`
 	Dom         interface{}       `json:"dom"`
 	Icon        string            `json:"icon"`
@@ -186,8 +187,40 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 	for name, tech := range technologies {
 		searched := false
 
+		// Check if the headers regex matches the content
+		if tech.Headers != nil && !searched {
+			for header, expectedValue := range tech.Headers {
+				actualValue := resp.Header.Get(header)
+				if expectedValue == "" && actualValue != "" {
+					helper.InfoPrintf("[Wappalyzer] Domain [%s] header static matched for technology: %s\n", domain, name)
+					helper.VerbosePrintln(header, "->", actualValue)
+
+					result.DomainName = domain
+					result.Technologies = append(result.Technologies, name)
+					searched = true
+					continue
+				} else if expectedValue != "" {
+
+					matches, err := wp.matchingWithModification(expectedValue, actualValue)
+					if err != nil {
+						helper.ErrorPrintf("[!] Error matching header regex for technology %s: %v\n", name, err)
+						continue
+					}
+					if len(matches) > 0 {
+						helper.InfoPrintf("[Wappalyzer] Domain [%s] header regex matched for technology: %s\n", domain, name)
+						helper.VerbosePrintln(expectedValue, "->", matches)
+
+						result.DomainName = domain
+						result.Technologies = append(result.Technologies, name)
+						searched = true
+						continue
+					}
+				}
+			}
+		}
+
 		// Check if the HTML regex matches the content
-		if tech.HTML != nil {
+		if tech.HTML != nil && !searched {
 			switch html := tech.HTML.(type) {
 			case string:
 				matches, err := wp.matchingWithModification(html, content)
@@ -352,7 +385,16 @@ func (wp *Wappalyzer) matchingWithModification(pattern string, content string) (
 
 	// Find submatch
 	submatches := regex.FindStringSubmatch(content)
-	return submatches, nil
+
+	// Remove empty of only have spaces
+	var result []string
+	for _, s := range submatches {
+		trimmed := strings.TrimSpace(s)
+		if trimmed != "" {
+			result = append(result, s)
+		}
+	}
+	return result, nil
 }
 
 func appendDistinct(dest, src []string) []string {
