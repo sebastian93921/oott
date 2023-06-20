@@ -480,6 +480,14 @@ func (wp *Wappalyzer) appendDistinct(dest, src []WebsiteDetailTechnology) []Webs
 			continue
 		}
 
+		// Update the existing technology with a version from the source list
+		for _, srcTech := range src {
+			if srcTech.Name == tech.Name && srcTech.Version != "" {
+				tech.Version = srcTech.Version
+				break
+			}
+		}
+
 		// Append the distinct technology to the destination list
 		temp = append(temp, tech)
 		existing[tech.Name] = tech
@@ -489,6 +497,14 @@ func (wp *Wappalyzer) appendDistinct(dest, src []WebsiteDetailTechnology) []Webs
 		// Skip the technology if it already exists in the destination list
 		if _, found := existing[tech.Name]; found {
 			continue
+		}
+
+		// Update the existing technology with a version from the source list
+		for _, srcTech := range dest {
+			if srcTech.Name == tech.Name && srcTech.Version != "" {
+				tech.Version = srcTech.Version
+				break
+			}
 		}
 
 		// Append the distinct technology to the destination list
