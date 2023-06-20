@@ -310,13 +310,23 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 			}
 		}
 
-		// Add others require items
+		// Add others items
 		if searched {
+			// Required items
 			switch requires := tech.Requires.(type) {
 			case string:
 				result.Technologies = append(result.Technologies, requires)
 			case []string:
 				for _, s := range requires {
+					result.Technologies = append(result.Technologies, s)
+				}
+			}
+			// Implies items
+			switch implies := tech.Implies.(type) {
+			case string:
+				result.Technologies = append(result.Technologies, implies)
+			case []string:
+				for _, s := range implies {
 					result.Technologies = append(result.Technologies, s)
 				}
 			}
