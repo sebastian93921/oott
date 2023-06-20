@@ -463,8 +463,10 @@ func (wp *Wappalyzer) matchingWithModification(pattern string, content string) (
 			result = append(result, s)
 		}
 	}
-	if strings.Contains(pattern, "version") && len(result) > 0 {
-		helper.VerbosePrintln("+++++++++++++++++++++++++++++++++", pattern, ">>>>>>>>", result)
+
+	// Debug use
+	if strings.Contains(pattern, "version") && len(result) > 0 && lib.Config.VerboseMode {
+		helper.VerbosePrintln("[-] Regex contains version check [", pattern, "] > ", result)
 	}
 	return result, nil
 }
