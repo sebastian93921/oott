@@ -1,16 +1,20 @@
 package webscans
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"oott/helper"
-	"oott/lib"
 	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	"oott/helper"
+	"oott/lib"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 type Technology struct {
@@ -169,6 +173,8 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 
 	// Search for technologies based on HTML regex or script source
 	for name, tech := range technologies {
+		searched := false
+
 		// Check if the HTML regex matches the content
 		if tech.HTML != nil {
 			switch html := tech.HTML.(type) {
@@ -179,14 +185,14 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					continue
 				}
 				if len(matches) > 0 {
-					helper.InfoPrintf("[Wappalyzer] Domain [%s] HTML regex match found for technology: %s\n", domain, name)
+					helper.InfoPrintf("[Wappalyzer] Domain [%s] HTML regex matched for technology: %s\n", domain, name)
 					helper.VerbosePrintln(html, "->", matches)
 
 					result.DomainName = domain
 					result.Technologies = append(result.Technologies, name)
+					searched = true
 				}
 			case []string:
-				fmt.Println("HTML:")
 				for _, s := range html {
 					matches, err := wp.matchingWithModification(s, content)
 					if err != nil {
@@ -194,18 +200,19 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						continue
 					}
 					if len(matches) > 0 {
-						helper.InfoPrintf("[Wappalyzer] Domain [%s] HTML regex match found for technology: %s\n", domain, name)
+						helper.InfoPrintf("[Wappalyzer] Domain [%s] HTML regex matched for technology: %s\n", domain, name)
 						helper.VerbosePrintln(s, "->", matches)
 
 						result.DomainName = domain
 						result.Technologies = append(result.Technologies, name)
+						searched = true
 					}
 				}
 			}
 		}
 
 		// Check if the script source matches the content
-		if tech.HTML != nil {
+		if tech.HTML != nil && !searched {
 			switch src := tech.ScriptSrc.(type) {
 			case string:
 				matches, err := wp.matchingWithModification(src, content)
@@ -214,14 +221,14 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					continue
 				}
 				if len(matches) > 0 {
-					helper.InfoPrintf("[Wappalyzer] Domain [%s] Script source regex match found for technology: %s\n", domain, name)
+					helper.InfoPrintf("[Wappalyzer] Domain [%s] Script source regex matched for technology: %s\n", domain, name)
 					helper.VerbosePrintln(src, "->", matches)
 
 					result.DomainName = domain
 					result.Technologies = append(result.Technologies, name)
+					searched = true
 				}
 			case []string:
-				fmt.Println("HTML:")
 				for _, s := range src {
 					matches, err := wp.matchingWithModification(s, content)
 					if err != nil {
@@ -229,11 +236,64 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						continue
 					}
 					if len(matches) > 0 {
-						helper.InfoPrintf("[Wappalyzer] Domain [%s] Script source regex match found for technology: %s\n", domain, name)
+						helper.InfoPrintf("[Wappalyzer] Domain [%s] Script source regex matched for technology: %s\n", domain, name)
 						helper.VerbosePrintln(s, "->", matches)
 
 						result.DomainName = domain
 						result.Technologies = append(result.Technologies, name)
+						searched = true
+					}
+				}
+			}
+		}
+
+		// Dom search
+		if tech.Dom != nil && !searched {
+			// Create a reader from the byte array
+			reader := bytes.NewReader(body)
+
+			// Parse the HTML document
+			doc, err := goquery.NewDocumentFromReader(reader)
+			if err != nil {
+				helper.ErrorPrintf("[!] Error perform dom search %s: %v\n", name, err)
+				continue
+			}
+
+			switch dom := tech.Dom.(type) {
+			case string:
+				elements := doc.Find(dom)
+
+				if elements.Length() > 0 {
+					helper.InfoPrintf("[Wappalyzer] Domain [%s] Dom search matched for technology: %s\n", domain, name)
+					if lib.Config.VerboseMode {
+						elements.Each(func(i int, element *goquery.Selection) {
+							for _, node := range element.Nodes {
+								helper.VerbosePrintln(node)
+							}
+						})
+					}
+
+					result.DomainName = domain
+					result.Technologies = append(result.Technologies, name)
+					searched = true
+				}
+			case []string:
+				for _, s := range dom {
+					elements := doc.Find(s)
+
+					if elements.Length() > 0 {
+						helper.InfoPrintf("[Wappalyzer] Domain [%s] Dom search matched for technology: %s\n", domain, name)
+						if lib.Config.VerboseMode {
+							elements.Each(func(i int, element *goquery.Selection) {
+								for _, node := range element.Nodes {
+									helper.VerbosePrintln(node)
+								}
+							})
+						}
+
+						result.DomainName = domain
+						result.Technologies = append(result.Technologies, name)
+						searched = true
 					}
 				}
 			}
