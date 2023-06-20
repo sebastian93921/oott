@@ -156,7 +156,7 @@ func pickRandomDNSServers(dnsServers []string, count int) []string {
 	}
 
 	// Set a random seed based on the current time
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// Shuffle the dnsServers slice
 	rand.Shuffle(len(dnsServers), func(i, j int) {
