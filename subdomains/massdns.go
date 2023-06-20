@@ -182,11 +182,7 @@ func isMassDNSInstalled() bool {
 	_, err := cmd.Output()
 
 	// Check for errors
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func (s *Massdns) runMassDNS(resolversFilePath string, subdomains []string) error {

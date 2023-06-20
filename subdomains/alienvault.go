@@ -36,7 +36,10 @@ func (s *Alienvault) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	}
 
 	var data map[string]interface{}
-	json.Unmarshal(body, &data)
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return nil, err
+	}
 
 	passiveDNS, ok := data["passive_dns"].([]interface{})
 	if !ok {

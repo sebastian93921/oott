@@ -25,7 +25,7 @@ func (s *DuckDuckGo) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	encountered := map[string]bool{}
 	var result []SubDomainDetails
 	for v := range elements {
-		if encountered[elements[v]] == true {
+		if encountered[elements[v]] {
 			continue
 		}
 

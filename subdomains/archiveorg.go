@@ -33,7 +33,10 @@ func (s *Archiveorg) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	}
 
 	var urls [][]string
-	json.Unmarshal(body, &urls)
+	err = json.Unmarshal(body, &urls)
+	if err != nil {
+		return nil, err
+	}
 
 	domainSubdomains := make(map[string]bool)
 

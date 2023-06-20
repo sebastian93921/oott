@@ -25,7 +25,7 @@ func (s *DuckDuckGo) ScanEmails(domain string) ([]EmailDetails, error) {
 	encountered := map[string]bool{}
 	var result []EmailDetails
 	for v := range elements {
-		if encountered[elements[v]] == true {
+		if encountered[elements[v]] {
 			continue
 		}
 

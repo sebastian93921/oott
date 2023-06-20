@@ -82,7 +82,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		"185.228.168.9",  // CleanBrowsing DNS
 		"8.8.4.4",        // Google Public DNS Secondary
 	}
-	if dnsServers == nil {
+	if len(dnsServers) == 0 {
 		return nil, nil
 	}
 

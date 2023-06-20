@@ -33,7 +33,7 @@ func (ef *Github) ScanEmails(domain string) ([]EmailDetails, error) {
 		helper.VerbosePrintln("[-] Emails in the list:", emails)
 	}
 	for v := range emails {
-		if encountered[emails[v]] == true {
+		if encountered[emails[v]] {
 			continue
 		}
 

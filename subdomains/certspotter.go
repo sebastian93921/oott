@@ -71,7 +71,7 @@ func (s *CertSpotter) removeDuplicates(elements []string) []SubDomainDetails {
 	var result []SubDomainDetails
 
 	for v := range elements {
-		if encountered[elements[v]] == true {
+		if encountered[elements[v]] {
 			continue
 		}
 

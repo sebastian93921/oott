@@ -92,7 +92,10 @@ func (s *Urlscan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	// Unmarshal the payload JSON into a slice of Payload structs
 	var payloadData Payload
-	json.Unmarshal(body, &payloadData)
+	err = json.Unmarshal(body, &payloadData)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, p := range payloadData.Results {
 		if strings.Contains(p.Task.Domain, domain) {

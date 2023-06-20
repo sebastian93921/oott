@@ -42,7 +42,10 @@ func (s *Leakix) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	// Unmarshal the JSON response into a slice of Subdomain structs
 	var subdomains []Subdomain
-	json.Unmarshal(body, &subdomains)
+	err = json.Unmarshal(body, &subdomains)
+	if err != nil {
+		return nil, err
+	}
 
 	var subdomainDetails []SubDomainDetails
 	for _, subdomain := range subdomains {
