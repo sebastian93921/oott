@@ -23,4 +23,4 @@ go.work
 # Configuration
 config.json
 filtering.txt
-
+.gitignore
