@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/http"
 	"oott/helper"
-	"oott/lib"
 	"regexp"
 	"strings"
 	"time"
@@ -50,9 +49,8 @@ func (p *PGPScan) ScanEmails(domain string) ([]EmailDetails, error) {
 
 			// Deduplicate the email addresses using a map
 			for _, match := range matches {
-				if lib.Config.VerboseMode {
-					helper.VerbosePrintln("[-] Found email from results:", match)
-				}
+				helper.VerbosePrintln("[-] Found email from results:", match)
+
 				deduplicated[match] = true
 			}
 

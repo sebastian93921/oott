@@ -7,7 +7,6 @@ import (
 	"syscall"
 
 	"oott/helper"
-	"oott/lib"
 )
 
 type SecretScanner interface {
@@ -40,9 +39,8 @@ func CreateInterruptHandler() {
 	go func() {
 		// Wait for the interrupt signal
 		<-interrupt
-		if lib.Config.VerboseMode {
-			helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
-		}
+		helper.ErrorPrintln("\n[!] Ctrl+C pressed. Exiting...")
+
 		// Signal cancellation to stop the scanner
 		CloseInterruptHandler()
 	}()

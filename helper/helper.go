@@ -23,7 +23,6 @@ func GetHttpStatusCode(url string) (string, error) {
 	req.Header = headers
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		return "", err
 	}
@@ -32,11 +31,18 @@ func GetHttpStatusCode(url string) (string, error) {
 }
 
 func OutputCsv(data [][]string) (string, error) {
-	filename := "/tmp/oott_subdomain-scan_" + getUnixTimestamp() + ".csv"
+	// Create folder if not exists
+	err := os.MkdirAll(lib.Config.Tmpfolder+"result/", os.ModePerm)
+	if err != nil {
+		ErrorPrintln("[!] Error creating download directory:", err)
+		return "", err
+	}
+
+	filename := lib.Config.Tmpfolder + "result/oott_subdomain-scan_" + getUnixTimestamp() + ".csv"
 
 	file, err := os.Create(filename)
 	if err != nil {
-		ErrorPrintln("[!] Something wrong when creating CSV file in /tmp")
+		ErrorPrintln("[!] Something wrong when creating CSV file in "+filename+". Error: ", err)
 		return "", err
 	}
 	defer file.Close()

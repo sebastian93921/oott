@@ -6,7 +6,9 @@ import (
 	"io"
 	"net/http"
 	"oott/helper"
+	"oott/lib"
 	"strings"
+	"time"
 )
 
 type Leakix struct {
@@ -18,10 +20,23 @@ func (s *Leakix) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	// Make the API request
 	url := fmt.Sprintf("https://leakix.net/api/subdomains/%s", domain)
-	resp, err := http.Get(url)
+	client := http.Client{
+		Timeout: time.Second * 2,
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
+	headers := http.Header{}
+	headers.Set("User-Agent", lib.Config.Useragent)
+	req.Header = headers
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
 	defer resp.Body.Close()
 
 	// Read the response body

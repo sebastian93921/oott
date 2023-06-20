@@ -8,6 +8,7 @@ import (
 
 	"oott/helper"
 	"oott/lib"
+	"oott/subdomains"
 )
 
 var (
@@ -16,9 +17,9 @@ var (
 )
 
 func printBanner() {
-	helper.VerbosePrintln("========================================================================================>")
-	helper.VerbosePrintln("OOTT - OSINT Offensive Toolkit")
-	helper.VerbosePrintln("<========================================================================================")
+	helper.CustomizePrintln("========================================================================================>")
+	helper.CustomizePrintln("OOTT - OSINT Offensive Toolkit")
+	helper.CustomizePrintln("<========================================================================================")
 }
 
 func Start() {
@@ -39,11 +40,14 @@ func Start() {
 	flag.BoolVar(&lib.Config.SecretScan, "secret-scan", false, "Perform secrets scanning by domain name.")
 	flag.StringVar(&lib.Config.SearchKeywords, "key-words", "", "Add more keywords in searching. eg. test,test2,test3 - Only valid on Secret scanning")
 
+	flag.BoolVar(&lib.Config.WebScan, "web-scan", false, "Perform web scanning")
+
 	flag.IntVar(&lib.Config.ConcurrentRunningThread, "threads", 500, "Maximum number of Concurrent thread uses.")
 	flag.IntVar(&lib.Config.ConcurrentRunningThread, "t", 500, "Maximum number of Concurrent thread uses (shorthand).")
 
 	flag.BoolVar(&lib.Config.VerboseMode, "verbose", false, "Enable verbose mode")
 	flag.BoolVar(&lib.Config.VerboseMode, "v", false, "Enable verbose mode (shorthand)")
+
 	flag.Parse()
 
 	if lib.Config.Help {
@@ -64,13 +68,19 @@ func Start() {
 	helper.ReadConfigFile()
 	helper.ReadFilteringListFile()
 
-	if lib.Config.VerboseMode {
-		helper.VerbosePrintln("[-] Verbose mode is enabled, resulting in more detailed console output.")
+	helper.VerbosePrintln("[-] Verbose mode is enabled, resulting in more detailed console output.")
+
+	// Create folder if not exists
+	err := os.MkdirAll(lib.Config.Tmpfolder, os.ModePerm)
+	if err != nil {
+		helper.ErrorPrintln("[!] Error creating download directory:", err)
+		os.Exit(1)
 	}
 
+	var subDomainDetails []subdomains.SubDomainDetails
 	if lib.Config.SubdomainScan {
 		// Return subdomain list
-		_ = StartSubDomainScan(*domain)
+		subDomainDetails = StartSubDomainScan(*domain)
 	}
 
 	if lib.Config.EmailScan {
@@ -81,6 +91,17 @@ func Start() {
 	if lib.Config.SecretScan {
 		// Return secrets if possible
 		_ = StartSecretScan(*domain)
+	}
+
+	if lib.Config.WebScan {
+		// Return webscan result if possible
+		domains := []string{*domain}
+		if len(subDomainDetails) > 0 {
+			for _, domain := range subDomainDetails {
+				domains = append(domains, domain.DomainName)
+			}
+		}
+		_ = StartWebScan(domains)
 	}
 
 	helper.InfoPrintln("[+] Please add generated hashes to the filtering list (filter.txt) to filter out the result for next time.")
@@ -99,9 +120,7 @@ func CreateInterruptHandler() {
 	go func() {
 		// Wait for the interrupt signal
 		<-interrupt
-		if lib.Config.VerboseMode {
-			helper.ErrorPrintln("\n[!] Receive interrupt signal")
-		}
+		helper.ErrorPrintln("\n[!] Receive interrupt signal")
 		// Signal cancellation to stop the scanner
 		CloseInterruptHandler()
 	}()

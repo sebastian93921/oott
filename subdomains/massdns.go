@@ -24,7 +24,6 @@ type Massdns struct {
 
 var (
 	massdnsCommand = "massdns"
-	tmpfolder      = "/tmp"
 )
 
 func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
@@ -35,8 +34,8 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	s.TargetDomain = domain
 	s.NumberOfResolverCount = lib.Config.ConcurrentRunningThread
 
-	wordlistFilePath := tmpfolder + "/subdomains-prefix.txt"
-	resolversFilePath := tmpfolder + "/dns-resolvers.txt"
+	wordlistFilePath := lib.Config.Tmpfolder + "/subdomains-prefix.txt"
+	resolversFilePath := lib.Config.Tmpfolder + "/dns-resolvers.txt"
 
 	if !isMassDNSInstalled() {
 		helper.ErrorPrintln("[!] MassDNS is not installed or not found. Run 'sudo apt install massdns' to install massdns.")
@@ -45,9 +44,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, nil
 	}
 
-	if lib.Config.VerboseMode {
-		helper.VerbosePrintln("[-] Running massdns scan with number of concurrent resolvers: ", s.NumberOfResolverCount)
-	}
+	helper.VerbosePrintln("[-] Running massdns scan with number of concurrent resolvers: ", s.NumberOfResolverCount)
 
 	// Download the file
 	err := downloadFile(resolversUrl, resolversFilePath)
@@ -66,9 +63,9 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 			helper.ErrorPrintln("[!] Error downloading file:", err)
 			return nil, nil
 		}
-	
+
 		helper.InfoPrintln("[+] Files downloaded successfully.")
-	}else{
+	} else {
 		wordlistFilePath = lib.Config.CustomWordlist
 	}
 
@@ -110,9 +107,8 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 			defer ticker.Stop()
 
 			for range ticker.C {
-				if lib.Config.VerboseMode {
-					helper.VerbosePrintf("[-] Generating combination of prefix, please wait... %d/%d\n", combinationsGenerated, totalCombinations)
-				}
+				helper.VerbosePrintf("[-] Generating combination of prefix, please wait... %d/%d\n", combinationsGenerated, totalCombinations)
+
 				if generateProcessFinished {
 					return
 				}
@@ -339,9 +335,7 @@ func (s *Massdns) runMassDNSByType(resolversFilePath string, subdomains []string
 				continue
 			}
 
-			if lib.Config.VerboseMode {
-				helper.VerbosePrintln("[-] Received response:", line)
-			}
+			helper.VerbosePrintln("[-] Received response:", line)
 
 			// Extract name, type, and status
 			name := result["name"].(string)

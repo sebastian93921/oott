@@ -4,7 +4,6 @@ import (
 	"html"
 	"oott/common"
 	"oott/helper"
-	"oott/lib"
 	"regexp"
 	"strings"
 )
@@ -29,9 +28,8 @@ func (ef *Github) ScanEmails(domain string) ([]EmailDetails, error) {
 	var emailDetails []EmailDetails
 	encountered := map[string]bool{}
 	helper.InfoPrintln("[+] Searching email related to the domain...")
-	if lib.Config.VerboseMode {
-		helper.VerbosePrintln("[-] Emails in the list:", emails)
-	}
+	helper.VerbosePrintln("[-] Emails in the list:", emails)
+
 	for v := range emails {
 		if encountered[emails[v]] {
 			continue
@@ -53,10 +51,7 @@ func (ef *Github) ScanEmails(domain string) ([]EmailDetails, error) {
 
 func (ef *Github) searchEmailFromGithubRepo(item common.GithubRepo) []string {
 	repository := item.Repository.FullName
-
-	if lib.Config.VerboseMode {
-		helper.VerbosePrintln("[-] Searching email from repos:", repository)
-	}
+	helper.VerbosePrintln("[-] Searching email from repos:", repository)
 
 	rawContent, err := common.ExtractCodeFromGithubRepo(item)
 	if err != nil {
@@ -72,9 +67,7 @@ func (ef *Github) searchEmailFromGithubRepo(item common.GithubRepo) []string {
 		emailsList = append(emailsList, emails...)
 	}
 
-	if lib.Config.VerboseMode {
-		helper.VerbosePrintln("[-] Emails found:", emailsList)
-	}
+	helper.VerbosePrintln("[-] Emails found:", emailsList)
 	return emailsList
 }
 

@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"oott/helper"
-	"oott/lib"
 	"regexp"
 	"strings"
 )
@@ -54,9 +53,7 @@ func (s *Archiveorg) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		distinctList = append(distinctList, domainSubdomain)
 	}
 
-	if lib.Config.VerboseMode {
-		helper.VerbosePrintln("[-] Distinct Domain and Subdomain Names..")
-	}
+	helper.VerbosePrintln("[-] Distinct Domain and Subdomain Names..")
 	var subdomains []SubDomainDetails
 	for _, domainSubdomain := range distinctList {
 		subdomain := SubDomainDetails{

@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"oott/helper"
-	"oott/lib"
 	"strings"
 )
 
@@ -20,18 +19,14 @@ var duckduckgoCache DuckDuckGo
 
 func DuckDuckGoSearch(domain string, useragent string) (string, error) {
 	if duckduckgoCache == (DuckDuckGo{}) {
-		if lib.Config.VerboseMode {
-			helper.VerbosePrintln("[-] Creating new DuckDuckGo search instance...")
-		}
+		helper.VerbosePrintln("[-] Creating new DuckDuckGo search instance...")
 		duckduckgoCache = DuckDuckGo{
 			API:       "https://api.duckduckgo.com/?q=%s&format=json&pretty=1",
 			Useragent: useragent,
 		}
 		return duckduckgoCache.DuckDuckGoSearch(domain)
 	} else {
-		if lib.Config.VerboseMode {
-			helper.VerbosePrintln("[-] Using existing DuckDuckGo search instance...")
-		}
+		helper.VerbosePrintln("[-] Using existing DuckDuckGo search instance...")
 		return duckduckgoCache.DuckDuckGoSearch(domain)
 	}
 }
@@ -148,9 +143,8 @@ func (s *DuckDuckGo) filterURLs(urls []string) []string {
 }
 
 func (s *DuckDuckGo) fetchResponse(url string) string {
-	if lib.Config.VerboseMode {
-		helper.VerbosePrintln("[-] Fetching seperated website from response:", url)
-	}
+	helper.VerbosePrintln("[-] Fetching seperated website from response:", url)
+
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
