@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"oott/lib"
 	"os"
 
@@ -41,7 +40,7 @@ func ReadConfigFile() {
 			return
 		}
 
-		err = ioutil.WriteFile(filePath, fileBytes, 0644)
+		err = os.WriteFile(filePath, fileBytes, 0644)
 		if err != nil {
 			ErrorPrintln("[!] Error creating config file:", err)
 			return
@@ -51,7 +50,7 @@ func ReadConfigFile() {
 	}
 
 	// Read the JSON config file
-	fileBytes, err := ioutil.ReadFile(filePath)
+	fileBytes, err := os.ReadFile(filePath)
 	if err != nil {
 		ErrorPrintln("[!] Error on reading config file:", err)
 		return

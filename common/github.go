@@ -3,7 +3,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"oott/helper"
 	"oott/lib"
@@ -66,7 +66,7 @@ func SearchGithubRepoByKeyword(keywords string) []GithubRepo {
 	defer response.Body.Close()
 
 	if response.StatusCode == 200 {
-		responseBody, err := ioutil.ReadAll(response.Body)
+		responseBody, err := io.ReadAll(response.Body)
 		if err != nil {
 			helper.ErrorPrintf("[!] Error reading response body: %s\n", err.Error())
 			return nil
@@ -120,7 +120,7 @@ func ExtractCodeFromGithubRepo(item GithubRepo) (string, error) {
 	}
 	defer rawContentResponse.Body.Close()
 
-	rawContentBody, err := ioutil.ReadAll(rawContentResponse.Body)
+	rawContentBody, err := io.ReadAll(rawContentResponse.Body)
 	if err != nil {
 		helper.ErrorPrintf("[!] Error reading raw content response body: %s\n", err.Error())
 		return "", err
@@ -147,7 +147,7 @@ func ExtractCodeFromGithubRepo(item GithubRepo) (string, error) {
 	}
 	defer rawContentResponse.Body.Close()
 
-	rawContentBody, err = ioutil.ReadAll(rawContentResponse.Body)
+	rawContentBody, err = io.ReadAll(rawContentResponse.Body)
 	if err != nil {
 		helper.ErrorPrintf("[!] Error reading raw content response body: %s\n", err.Error())
 		return "", err

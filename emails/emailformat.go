@@ -2,7 +2,7 @@ package emails
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"oott/helper"
 	"regexp"
@@ -23,7 +23,7 @@ func (ef *EmailFormat) ScanEmails(domain string) ([]EmailDetails, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		helper.ErrorPrintln(err)
 		return nil, nil

@@ -3,7 +3,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"oott/helper"
 	"oott/lib"
@@ -56,7 +56,7 @@ func (s *DuckDuckGo) DuckDuckGoSearch(domain string) (string, error) {
 			return "", err
 		}
 
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			helper.ErrorPrintln(err)
 			return "", err
@@ -166,7 +166,7 @@ func (s *DuckDuckGo) fetchResponse(url string) string {
 		return ""
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		helper.ErrorPrintln(err)
 		return ""

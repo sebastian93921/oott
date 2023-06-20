@@ -3,7 +3,7 @@ package subdomains
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"oott/helper"
 )
@@ -30,7 +30,7 @@ func (s *Alienvault) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	defer resp.Body.Close()
 
 	// Read the response body
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

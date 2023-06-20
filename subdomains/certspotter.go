@@ -2,7 +2,7 @@ package subdomains
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"oott/helper"
 	"regexp"
@@ -35,7 +35,7 @@ func (s *CertSpotter) ScanSubdomains(domain string) ([]SubDomainDetails, error) 
 		}
 		defer resp.Body.Close()
 
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			helper.ErrorPrintln(err)
 			return nil, err
