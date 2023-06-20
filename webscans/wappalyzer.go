@@ -19,17 +19,18 @@ import (
 )
 
 type Technology struct {
-	Cats        []int             `json:"cats"`
-	Description string            `json:"description"`
-	Headers     map[string]string `json:"headers"`
-	HTML        interface{}       `json:"html"`
-	Dom         interface{}       `json:"dom"`
-	Icon        string            `json:"icon"`
-	Implies     interface{}       `json:"implies"`
-	Js          map[string]string `json:"js"`
-	ScriptSrc   interface{}       `json:"scriptSrc"`
-	Requires    interface{}       `json:"requires"`
-	Website     string            `json:"website"`
+	Cats        []int                  `json:"cats"`
+	Description string                 `json:"description"`
+	Headers     map[string]string      `json:"headers"`
+	Meta        map[string]interface{} `json:"meta"`
+	HTML        interface{}            `json:"html"`
+	Dom         interface{}            `json:"dom"`
+	Icon        string                 `json:"icon"`
+	Implies     interface{}            `json:"implies"`
+	Js          map[string]string      `json:"js"`
+	ScriptSrc   interface{}            `json:"scriptSrc"`
+	Requires    interface{}            `json:"requires"`
+	Website     string                 `json:"website"`
 }
 
 // Port Wappalyzer technology scanner database to go for regex scanning based on content
@@ -137,7 +138,7 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 		}
 
 		if resultHttps.DomainName != "" {
-			resultHttps.Technologies = appendDistinct(resultHttps.Technologies, resultHttp.Technologies)
+			resultHttps.Technologies = wp.appendDistinct(resultHttps.Technologies, resultHttp.Technologies)
 		} else if resultHttp.DomainName != "" {
 			// No result on https, just use it to append the result
 			resultHttps = resultHttp
@@ -196,7 +197,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					helper.VerbosePrintln(header, "->", actualValue)
 
 					result.DomainName = domain
-					result.Technologies = append(result.Technologies, name)
+					result.Technologies = wp.appendToTechnology(result.Technologies, name, nil)
 					searched = true
 					continue
 				} else if expectedValue != "" {
@@ -211,9 +212,63 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						helper.VerbosePrintln(expectedValue, "->", matches)
 
 						result.DomainName = domain
-						result.Technologies = append(result.Technologies, name)
+						result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
 						searched = true
 						continue
+					}
+				}
+			}
+		}
+
+		// Check if the Meta regex matches the content
+		if tech.Meta != nil && !searched {
+			// Create a reader from the byte array
+			reader := bytes.NewReader(body)
+
+			// Parse the HTML document
+			doc, err := goquery.NewDocumentFromReader(reader)
+			if err != nil {
+				helper.ErrorPrintf("[!] Error perform meta search %s: %v\n", name, err)
+				continue
+			}
+
+			for metaName, metaValue := range tech.Meta {
+				switch regexv := metaValue.(type) {
+				case string:
+					selector := fmt.Sprintf(`meta[name="%s"]`, metaName)
+					doc.Find(selector).Each(func(i int, s *goquery.Selection) {
+						content := s.AttrOr("content", "")
+						matches, err := wp.matchingWithModification(regexv, content)
+						if err != nil {
+							helper.ErrorPrintf("[!] Error matching Meta regex for technology %s: %v\n", name, err)
+						}
+						if len(matches) > 0 {
+							helper.InfoPrintf("[Wappalyzer] Domain [%s] Meta regex matched for technology: %s\n", domain, name)
+							helper.VerbosePrintln(regexv, "->", matches)
+
+							result.DomainName = domain
+							result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
+							searched = true
+						}
+					})
+				case []string:
+					for _, value := range regexv {
+						selector := fmt.Sprintf(`meta[name="%s"]`, metaName)
+						doc.Find(selector).Each(func(i int, s *goquery.Selection) {
+							content := s.AttrOr("content", "")
+							matches, err := wp.matchingWithModification(value, content)
+							if err != nil {
+								helper.ErrorPrintf("[!] Error matching Meta regex for technology %s: %v\n", name, err)
+							}
+							if len(matches) > 0 {
+								helper.InfoPrintf("[Wappalyzer] Domain [%s] Meta regex matched for technology: %s\n", domain, name)
+								helper.VerbosePrintln(value, "->", matches)
+
+								result.DomainName = domain
+								result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
+								searched = true
+							}
+						})
 					}
 				}
 			}
@@ -233,7 +288,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					helper.VerbosePrintln(html, "->", matches)
 
 					result.DomainName = domain
-					result.Technologies = append(result.Technologies, name)
+					result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
 					searched = true
 				}
 			case []string:
@@ -248,7 +303,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						helper.VerbosePrintln(s, "->", matches)
 
 						result.DomainName = domain
-						result.Technologies = append(result.Technologies, name)
+						result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
 						searched = true
 					}
 				}
@@ -269,7 +324,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					helper.VerbosePrintln(src, "->", matches)
 
 					result.DomainName = domain
-					result.Technologies = append(result.Technologies, name)
+					result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
 					searched = true
 				}
 			case []string:
@@ -284,7 +339,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						helper.VerbosePrintln(s, "->", matches)
 
 						result.DomainName = domain
-						result.Technologies = append(result.Technologies, name)
+						result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
 						searched = true
 					}
 				}
@@ -318,7 +373,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					}
 
 					result.DomainName = domain
-					result.Technologies = append(result.Technologies, name)
+					result.Technologies = wp.appendToTechnology(result.Technologies, name, nil)
 					searched = true
 				}
 			case []string:
@@ -336,7 +391,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						}
 
 						result.DomainName = domain
-						result.Technologies = append(result.Technologies, name)
+						result.Technologies = wp.appendToTechnology(result.Technologies, name, nil)
 						searched = true
 					}
 				}
@@ -348,25 +403,39 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 			// Required items
 			switch requires := tech.Requires.(type) {
 			case string:
-				result.Technologies = append(result.Technologies, requires)
+				result.Technologies = wp.appendToTechnology(result.Technologies, requires, nil)
 			case []string:
 				for _, s := range requires {
-					result.Technologies = append(result.Technologies, s)
+					result.Technologies = wp.appendToTechnology(result.Technologies, s, nil)
 				}
 			}
 			// Implies items
 			switch implies := tech.Implies.(type) {
 			case string:
-				result.Technologies = append(result.Technologies, implies)
+				result.Technologies = wp.appendToTechnology(result.Technologies, implies, nil)
 			case []string:
 				for _, s := range implies {
-					result.Technologies = append(result.Technologies, s)
+					result.Technologies = wp.appendToTechnology(result.Technologies, s, nil)
 				}
 			}
 		}
 	}
 
 	return result, nil
+}
+
+func (wp *Wappalyzer) appendToTechnology(websiteDetailTechnology []WebsiteDetailTechnology, technologyName string, matchesResults []string) []WebsiteDetailTechnology {
+	newWebsiteDetailTechnology := WebsiteDetailTechnology{
+		Name: technologyName,
+	}
+
+	// Try to add version into the technology
+	if matchesResults != nil && len(matchesResults) > 1 {
+		newWebsiteDetailTechnology.Version = matchesResults[1]
+	}
+
+	websiteDetailTechnology = append(websiteDetailTechnology, newWebsiteDetailTechnology)
+	return websiteDetailTechnology
 }
 
 func (wp *Wappalyzer) matchingWithModification(pattern string, content string) (matchesResults []string, err error) {
@@ -394,25 +463,40 @@ func (wp *Wappalyzer) matchingWithModification(pattern string, content string) (
 			result = append(result, s)
 		}
 	}
+	if strings.Contains(pattern, "version") && len(result) > 0 {
+		helper.VerbosePrintln("+++++++++++++++++++++++++++++++++", pattern, ">>>>>>>>", result)
+	}
 	return result, nil
 }
 
-func appendDistinct(dest, src []string) []string {
-	// Create a map to track distinct elements
-	distinctMap := make(map[string]bool)
-	for _, val := range dest {
-		distinctMap[val] = true
-	}
+func (wp *Wappalyzer) appendDistinct(dest, src []WebsiteDetailTechnology) []WebsiteDetailTechnology {
+	var temp []WebsiteDetailTechnology
 
-	// Append distinct elements from src to dest
-	for _, val := range src {
-		if !distinctMap[val] {
-			dest = append(dest, val)
-			distinctMap[val] = true
+	// Create a map to track the existing technologies in the destination list
+	existing := make(map[string]WebsiteDetailTechnology)
+	for _, tech := range dest {
+		// Skip the technology if it already exists in the destination list
+		if _, found := existing[tech.Name]; found {
+			continue
 		}
+
+		// Append the distinct technology to the destination list
+		temp = append(temp, tech)
+		existing[tech.Name] = tech
 	}
 
-	return dest
+	for _, tech := range src {
+		// Skip the technology if it already exists in the destination list
+		if _, found := existing[tech.Name]; found {
+			continue
+		}
+
+		// Append the distinct technology to the destination list
+		temp = append(temp, tech)
+		existing[tech.Name] = tech
+	}
+
+	return temp
 }
 
 func combineMaps(map1, map2 map[string]Technology) {
