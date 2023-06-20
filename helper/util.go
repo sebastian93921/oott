@@ -34,8 +34,8 @@ var ResultPrintf = color.New(color.FgGreen).PrintfFunc()
 var ResultPrintln = color.New(color.FgGreen).PrintlnFunc()
 
 // Customize Color
-var CustomizePrintf = color.New(color.FgCyan).PrintfFunc()
-var CustomizePrintln = color.New(color.FgCyan).PrintlnFunc()
+var CustomizePrintf = color.New(color.FgYellow).PrintfFunc()
+var CustomizePrintln = color.New(color.FgYellow).PrintlnFunc()
 
 type ConfigFile struct {
 	GitHubAPIToken string `json:"github_api_token"`
