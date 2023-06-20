@@ -58,9 +58,7 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 			if !lib.FilteringList[hashString] && subdomain.DomainName != "" {
 				subdomainLists = append(subdomainLists, subdomain)
 			} else {
-				if lib.Config.VerboseMode {
-					helper.VerbosePrintln("[-] Input matches a hash from the filtering list:", subdomain.DomainName)
-				}
+				helper.VerbosePrintln("[-] Input matches a hash from the filtering list:", subdomain.DomainName)
 			}
 		}
 
@@ -103,7 +101,7 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 				httpsStatusCode, err := helper.GetHttpStatusCode("https://" + domain)
 				if err == nil {
 					helper.ResultPrintf("      +- HTTPS status code: %s\n", httpsStatusCode)
-				} else if lib.Config.VerboseMode {
+				} else {
 					helper.ResultPrintf("      +- HTTPS status code: ERR\n")
 				}
 
@@ -111,7 +109,7 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 				httpStatusCode, err := helper.GetHttpStatusCode("http://" + domain)
 				if err == nil {
 					helper.ResultPrintf("      +- HTTP status code: %s\n", httpStatusCode)
-				} else if lib.Config.VerboseMode {
+				} else {
 					helper.ResultPrintf("      +- HTTP status code: ERR\n")
 				}
 			}

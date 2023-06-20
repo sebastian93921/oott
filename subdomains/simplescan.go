@@ -28,7 +28,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 
 	helper.InfoPrintln("[+] Scanning subdomains on SimpleScan:", domain)
 
-	wordlistFilePath := tmpfolder + "/subdomains-prefix.txt"
+	wordlistFilePath := lib.Config.Tmpfolder + "/subdomains-prefix.txt"
 	timeout := 200 * time.Millisecond // Adjust timeout duration as needed
 	workerCount := 100                // Number of worker goroutines
 
@@ -41,9 +41,7 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		workerCount = lib.Config.ConcurrentRunningThread
 	}
 
-	if lib.Config.VerboseMode {
-		helper.VerbosePrintln("[-] Running simple scan with number of workers: ", workerCount)
-	}
+	helper.VerbosePrintln("[-] Running simple scan with number of workers: ", workerCount)
 
 	if lib.Config.CustomWordlist == "" {
 		// Download the file
@@ -108,9 +106,8 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 			break
 		default:
 			count++
-			if lib.Config.VerboseMode {
-				helper.VerbosePrintf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
-			}
+			helper.VerbosePrintf("[-] Start scanning domain : %-40s Progress: %d/%d - %d%%\n", subdomainStr, count, totalSubdomain, count*100/totalSubdomain)
+
 			task := SubdomainTask{
 				SubdomainTarget: subdomainStr,
 				DNSServers:      dnsServers,
@@ -168,9 +165,8 @@ func pickRandomDNSServers(dnsServers []string, count int) []string {
 }
 
 func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, dnsServers []string, timeout time.Duration) {
-	if lib.Config.VerboseMode {
-		helper.VerbosePrintln("[-] Start on subdomain: ", subdomainTarget)
-	}
+	helper.VerbosePrintln("[-] Start on subdomain: ", subdomainTarget)
+
 	randomDnsServers := pickRandomDNSServers(dnsServers, 500)
 	count := 0
 	// Perform DNS lookup using different DNS servers
@@ -195,14 +191,12 @@ func (s *SimpleScan) simpleSubdomainCheckByTargetAndDns(subdomainTarget string, 
 			addresses, err := resolver.LookupHost(ctx, subdomainTarget)
 			if err != nil {
 				/* DEBUG Only - Too many outputs
-				if lib.Config.VerboseMode {
-					if err, ok := err.(net.Error); ok && err.Timeout() {
-						// DNS lookup timed out
-						helper.VerbosePrintf("[-] DNS lookup timed out for subdomain '%s' on DNS server %s\n", subdomainTarget, dnsServer)
-					} else {
-						// Subdomain doesn't exist or encountered another error
-						helper.VerbosePrintf("[-] Subdomain '%s' does not exist or encountered an error on DNS server %s: %v\n", subdomainTarget, dnsServer, err)
-					}
+				if err, ok := err.(net.Error); ok && err.Timeout() {
+					// DNS lookup timed out
+					helper.VerbosePrintf("[-] DNS lookup timed out for subdomain '%s' on DNS server %s\n", subdomainTarget, dnsServer)
+				} else {
+					// Subdomain doesn't exist or encountered another error
+					helper.VerbosePrintf("[-] Subdomain '%s' does not exist or encountered an error on DNS server %s: %v\n", subdomainTarget, dnsServer, err)
 				}
 				*/
 				continue

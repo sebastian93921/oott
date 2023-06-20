@@ -18,11 +18,24 @@ var InfoPrintln = color.New(color.FgWhite).PrintlnFunc()
 var ErrorPrintf = color.New(color.FgRed).PrintfFunc()
 var ErrorPrintln = color.New(color.FgRed).PrintlnFunc()
 
-var VerbosePrintf = color.New(color.FgYellow).PrintfFunc()
-var VerbosePrintln = color.New(color.FgYellow).PrintlnFunc()
+func VerbosePrintf(format string, a ...interface{}) {
+	if lib.Config.VerboseMode {
+		color.New(color.FgYellow).Printf(format, a...)
+	}
+}
+
+func VerbosePrintln(a ...interface{}) {
+	if lib.Config.VerboseMode {
+		color.New(color.FgYellow).Println(a...)
+	}
+}
 
 var ResultPrintf = color.New(color.FgGreen).PrintfFunc()
 var ResultPrintln = color.New(color.FgGreen).PrintlnFunc()
+
+// Customize Color
+var CustomizePrintf = color.New(color.FgCyan).PrintfFunc()
+var CustomizePrintln = color.New(color.FgCyan).PrintlnFunc()
 
 type ConfigFile struct {
 	GitHubAPIToken string `json:"github_api_token"`
@@ -98,9 +111,7 @@ func ReadFilteringListFile() {
 		lib.FilteringList[line] = true
 	}
 
-	if lib.Config.VerboseMode {
-		VerbosePrintln("[-] Filtering list defined:", lib.FilteringList)
-	}
+	VerbosePrintln("[-] Filtering list defined:", lib.FilteringList)
 }
 
 func CalculateHash(input string) string {

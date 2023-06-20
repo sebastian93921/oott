@@ -44,9 +44,7 @@ func StartSecretScan(domain string) []secrets.SecretDetails {
 			if !lib.FilteringList[hashString] {
 				secretsLists = append(secretsLists, result)
 			} else {
-				if lib.Config.VerboseMode {
-					helper.VerbosePrintln("[-] Input matches a hash from the filtering list:", result.ContentSource)
-				}
+				helper.VerbosePrintln("[-] Input matches a hash from the filtering list:", result.ContentSource)
 			}
 		}
 	}
