@@ -1,15 +1,18 @@
 package lib
 
 type Configuration struct {
-	Help                    bool
+	Help        bool
+	Useragent   string
+	NoExport    bool
+	VerboseMode bool
+
 	IsFastScan              bool
 	SubdomainScan           bool
-	EmailScan               bool
-	VerboseMode             bool
 	HttpStatusCodeTest      bool
 	ConcurrentRunningThread int
-	NoExport                bool
-	Useragent               string
+	CustomWordlist          string
+
+	EmailScan bool
 
 	SecretScan     bool
 	SearchKeywords string

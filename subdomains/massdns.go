@@ -56,17 +56,21 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		return nil, nil
 	}
 
-	if lib.Config.IsFastScan {
-		err = downloadFile(wordlist_long, wordlistFilePath)
-	} else {
-		err = downloadFile(wordlist, wordlistFilePath)
+	if lib.Config.CustomWordlist == "" {
+		if lib.Config.IsFastScan {
+			err = downloadFile(wordlist_long, wordlistFilePath)
+		} else {
+			err = downloadFile(wordlist, wordlistFilePath)
+		}
+		if err != nil {
+			helper.ErrorPrintln("[!] Error downloading file:", err)
+			return nil, nil
+		}
+	
+		helper.InfoPrintln("[+] Files downloaded successfully.")
+	}else{
+		wordlistFilePath = lib.Config.CustomWordlist
 	}
-	if err != nil {
-		helper.ErrorPrintln("[!] Error downloading file:", err)
-		return nil, nil
-	}
-
-	helper.InfoPrintln("[+] Files downloaded successfully.")
 
 	// Open the file for reading
 	file, err := os.Open(wordlistFilePath)

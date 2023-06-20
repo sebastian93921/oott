@@ -45,11 +45,15 @@ func (s *SimpleScan) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 		helper.VerbosePrintln("[-] Running simple scan with number of workers: ", workerCount)
 	}
 
-	// Download the file
-	err := downloadFile(wordlist, wordlistFilePath)
-	if err != nil {
-		helper.ErrorPrintln("[!] Error downloading file:", err)
-		return nil, nil
+	if lib.Config.CustomWordlist == "" {
+		// Download the file
+		err := downloadFile(wordlist, wordlistFilePath)
+		if err != nil {
+			helper.ErrorPrintln("[!] Error downloading file:", err)
+			return nil, nil
+		}
+	} else {
+		wordlistFilePath = lib.Config.CustomWordlist
 	}
 
 	helper.InfoPrintln("[+] Files downloaded successfully.")

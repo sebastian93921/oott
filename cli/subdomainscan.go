@@ -31,6 +31,9 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 	helper.InfoPrintln("[+] Fast Scan enabled [", lib.Config.IsFastScan, "]")
 	helper.InfoPrintln("[+] HTTP Status Scan enabled [", lib.Config.HttpStatusCodeTest, "]")
 	helper.InfoPrintln("[+] Maximum number of concurrent thread [", lib.Config.ConcurrentRunningThread, "]")
+	if lib.Config.CustomWordlist != "" {
+		helper.InfoPrintln("[+] Customized wordlist [", lib.Config.CustomWordlist, "]")
+	}
 	helper.InfoPrintln("========================================================================================>")
 	for _, sf := range subdomainScanResults {
 		structName := fmt.Sprintf("%T", sf)

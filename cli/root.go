@@ -34,6 +34,7 @@ func Start() {
 	flag.BoolVar(&lib.Config.IsFastScan, "fast-scan", false, "Perform fast scanning (Have to combine with different scanning type)")
 	flag.BoolVar(&lib.Config.HttpStatusCodeTest, "http-status-scan", false, "Get HTTP status code for each subdomain found.")
 	flag.BoolVar(&lib.Config.NoExport, "no-export", false, "Disable export CSV features.")
+	flag.StringVar(&lib.Config.CustomWordlist, "wordlist", "", "Customize wordlist, please use full path for your customize wordlist. eg. wordlist.txt")
 
 	flag.BoolVar(&lib.Config.SecretScan, "secret-scan", false, "Perform secrets scanning by domain name.")
 	flag.StringVar(&lib.Config.SearchKeywords, "key-words", "", "Add more keywords in searching. eg. test,test2,test3 - Only valid on Secret scanning")
