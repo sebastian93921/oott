@@ -26,6 +26,7 @@ type Technology struct {
 	Implies     interface{}       `json:"implies"`
 	Js          map[string]string `json:"js"`
 	ScriptSrc   interface{}       `json:"scriptSrc"`
+	Requires    interface{}       `json:"requires"`
 	Website     string            `json:"website"`
 }
 
@@ -295,6 +296,18 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						result.Technologies = append(result.Technologies, name)
 						searched = true
 					}
+				}
+			}
+		}
+
+		// Add others require items
+		if searched {
+			switch requires := tech.Requires.(type) {
+			case string:
+				result.Technologies = append(result.Technologies, requires)
+			case []string:
+				for _, s := range requires {
+					result.Technologies = append(result.Technologies, s)
 				}
 			}
 		}
