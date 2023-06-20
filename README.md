@@ -4,7 +4,7 @@ Note: This application only works on UNIX / LINUX like operating system
 # Example
 ## Sub-domain scanning
 ```
-./oott -d example.com -subdomain-scan -fast-scan -http-status-scan -wordlist /mnt/f/workspace/oott/wordlist.txt
+./oott -d example.com -subdomain-scan -fast-scan -http-status-scan -wordlist /tmp/wordlist.txt
 ```
 
 ## Email scanning
