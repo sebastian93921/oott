@@ -62,7 +62,7 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 	helper.InfoPrintln("========================================================================================>")
 	// Results
 	for _, result := range websiteResults {
-		helper.ResultPrintf("Domain: %-60s Source: %s\n", result.DomainName, result.Source)
+		helper.ResultPrintf("Domain: %-40s Source: %s\n", result.DomainName, result.Source)
 
 		for _, technology := range result.Technologies {
 			helper.ResultPrintf("  +- %s", technology.Name)
@@ -71,6 +71,7 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 			}
 			helper.ResultPrintln()
 		}
+		helper.ResultPrintln(">> Total:", len(result.Technologies), "\n")
 	}
 	helper.InfoPrintln("<========================================================================================")
 	helper.InfoPrintln("[+] End of web scan")

@@ -208,13 +208,12 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					result.DomainName = domain
 					result.Technologies = wp.appendToTechnology(result.Technologies, name, nil)
 					searched = true
-					continue
 				} else if expectedValue != "" {
 
 					matches, err := wp.matchingWithModification(expectedValue, actualValue)
 					if err != nil {
 						helper.ErrorPrintf("[!] Error matching header regex for technology %s: %v\n", name, err)
-						continue
+						helper.VerbosePrintln("[ERR > ]", expectedValue)
 					}
 					if len(matches) > 0 {
 						helper.InfoPrintf("[Wappalyzer] Domain [%s] header regex matched for technology: %s\n", domain, name)
@@ -223,7 +222,6 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						result.DomainName = domain
 						result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
 						searched = true
-						continue
 					}
 				}
 			}
@@ -250,6 +248,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						matches, err := wp.matchingWithModification(regexv, content)
 						if err != nil {
 							helper.ErrorPrintf("[!] Error matching Meta regex for technology %s: %v\n", name, err)
+							helper.VerbosePrintln("[ERR > ]", regexv)
 						}
 						if len(matches) > 0 {
 							helper.InfoPrintf("[Wappalyzer] Domain [%s] Meta regex matched for technology: %s\n", domain, name)
@@ -260,14 +259,17 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 							searched = true
 						}
 					})
-				case []string:
+				case []interface{}:
 					for _, value := range regexv {
 						selector := fmt.Sprintf(`meta[name="%s"]`, metaName)
 						doc.Find(selector).Each(func(i int, s *goquery.Selection) {
 							content := s.AttrOr("content", "")
-							matches, err := wp.matchingWithModification(value, content)
+
+							converted := fmt.Sprint(value)
+							matches, err := wp.matchingWithModification(converted, content)
 							if err != nil {
 								helper.ErrorPrintf("[!] Error matching Meta regex for technology %s: %v\n", name, err)
+								helper.VerbosePrintln("[ERR > ]", value)
 							}
 							if len(matches) > 0 {
 								helper.InfoPrintf("[Wappalyzer] Domain [%s] Meta regex matched for technology: %s\n", domain, name)
@@ -290,7 +292,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 				matches, err := wp.matchingWithModification(html, content)
 				if err != nil {
 					helper.ErrorPrintf("[!] Error matching HTML regex for technology %s: %v\n", name, err)
-					continue
+					helper.VerbosePrintln("[ERR > ]", html)
 				}
 				if len(matches) > 0 {
 					helper.InfoPrintf("[Wappalyzer] Domain [%s] HTML regex matched for technology: %s\n", domain, name)
@@ -300,12 +302,13 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
 					searched = true
 				}
-			case []string:
+			case []interface{}:
 				for _, s := range html {
-					matches, err := wp.matchingWithModification(s, content)
+					converted := fmt.Sprint(s)
+					matches, err := wp.matchingWithModification(converted, content)
 					if err != nil {
 						helper.ErrorPrintf("[!] Error matching HTML regex for technology %s: %v\n", name, err)
-						continue
+						helper.VerbosePrintln("[ERR > ]", s)
 					}
 					if len(matches) > 0 {
 						helper.InfoPrintf("[Wappalyzer] Domain [%s] HTML regex matched for technology: %s\n", domain, name)
@@ -320,13 +323,13 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 		}
 
 		// Check if the script source matches the content
-		if tech.HTML != nil {
+		if tech.ScriptSrc != nil {
 			switch src := tech.ScriptSrc.(type) {
 			case string:
 				matches, err := wp.matchingWithModification(src, content)
 				if err != nil {
 					helper.ErrorPrintf("[!] Error matching script source regex for technology %s: %v\n", name, err)
-					continue
+					helper.VerbosePrintln("[ERR > ]", src)
 				}
 				if len(matches) > 0 {
 					helper.InfoPrintf("[Wappalyzer] Domain [%s] Script source regex matched for technology: %s\n", domain, name)
@@ -336,12 +339,13 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
 					searched = true
 				}
-			case []string:
+			case []interface{}:
 				for _, s := range src {
-					matches, err := wp.matchingWithModification(s, content)
+					converted := fmt.Sprint(s)
+					matches, err := wp.matchingWithModification(converted, content)
 					if err != nil {
 						helper.ErrorPrintf("[!] Error matching script source regex for technology %s: %v\n", name, err)
-						continue
+						helper.VerbosePrintln("[ERR > ]", s)
 					}
 					if len(matches) > 0 {
 						helper.InfoPrintf("[Wappalyzer] Domain [%s] Script source regex matched for technology: %s\n", domain, name)
@@ -385,9 +389,10 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					result.Technologies = wp.appendToTechnology(result.Technologies, name, nil)
 					searched = true
 				}
-			case []string:
+			case []interface{}:
 				for _, s := range dom {
-					elements := doc.Find(s)
+					converted := fmt.Sprint(s)
+					elements := doc.Find(converted)
 
 					if elements.Length() > 0 {
 						helper.InfoPrintf("[Wappalyzer] Domain [%s] Dom search matched for technology: %s\n", domain, name)
@@ -413,18 +418,20 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 			switch requires := tech.Requires.(type) {
 			case string:
 				result.Technologies = wp.appendToTechnology(result.Technologies, requires, nil)
-			case []string:
+			case []interface{}:
 				for _, s := range requires {
-					result.Technologies = wp.appendToTechnology(result.Technologies, s, nil)
+					converted := fmt.Sprint(s)
+					result.Technologies = wp.appendToTechnology(result.Technologies, converted, nil)
 				}
 			}
 			// Implies items
 			switch implies := tech.Implies.(type) {
 			case string:
 				result.Technologies = wp.appendToTechnology(result.Technologies, implies, nil)
-			case []string:
+			case []interface{}:
 				for _, s := range implies {
-					result.Technologies = wp.appendToTechnology(result.Technologies, s, nil)
+					converted := fmt.Sprint(s)
+					result.Technologies = wp.appendToTechnology(result.Technologies, converted, nil)
 				}
 			}
 		}
@@ -474,7 +481,7 @@ func (wp *Wappalyzer) appendToTechnology(websiteDetailTechnology []WebsiteDetail
 	}
 
 	// Try to add version into the technology
-	if matchesResults != nil && len(matchesResults) > 1 {
+	if len(matchesResults) > 1 {
 		newWebsiteDetailTechnology.Version = matchesResults[1]
 	}
 
