@@ -2,7 +2,6 @@ package webscans
 
 import (
 	"bytes"
-	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"oott/defaults"
 	"oott/helper"
 	"oott/lib"
 
@@ -37,9 +37,6 @@ type Technology struct {
 // Port Wappalyzer technology scanner database to go for regex scanning based on content
 type Wappalyzer struct {
 }
-
-//go:embed wappalyzer/*.json
-var embeddedWappalyzerFiles embed.FS
 
 func (wp *Wappalyzer) downloadJSON(url, filePath string) ([]byte, error) {
 	// Check if the file already exists
@@ -107,7 +104,7 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 			helper.ErrorPrintf("[!] Error downloading JSON file %s. Read the default files... Error: %v\n", fileName, err)
 
 			// Incase network issue, read local one
-			data, err = embeddedWappalyzerFiles.ReadFile("wappalyzer/" + fileName)
+			data, err = defaults.EmbeddedWappalyzerFiles.ReadFile("wappalyzer/" + fileName)
 			if err != nil {
 				helper.ErrorPrintf("[!] Error reading embedded file:", err)
 				return nil, err
