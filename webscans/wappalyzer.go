@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"regexp"
@@ -91,8 +92,13 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 	// Map to store the technologies
 	technologies := make(map[string]Technology)
 
-	// Loop through the range of file names (a.json to z.json)
-	for c := 'a'; c <= 'z'; c++ {
+	// Loop through the range of file names (_.json, a.json to z.json)
+	for c := '_'; c <= 'z'; c++ {
+		// Skip filenames before a.json
+		if c < 'a' && c != '_' {
+			continue
+		}
+
 		fileName := string(c) + ".json"
 		url := baseURL + fileName
 
@@ -184,12 +190,15 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 	}
 	content := string(body)
 
+	// Suffle technologies
+	technologies = wp.suffleTechnologiesMap(technologies)
+
 	// Search for technologies based on HTML regex or script source
 	for name, tech := range technologies {
 		searched := false
 
 		// Check if the headers regex matches the content
-		if tech.Headers != nil && !searched {
+		if tech.Headers != nil {
 			for header, expectedValue := range tech.Headers {
 				actualValue := resp.Header.Get(header)
 				if expectedValue == "" && actualValue != "" {
@@ -221,7 +230,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 		}
 
 		// Check if the Meta regex matches the content
-		if tech.Meta != nil && !searched {
+		if tech.Meta != nil {
 			// Create a reader from the byte array
 			reader := bytes.NewReader(body)
 
@@ -275,7 +284,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 		}
 
 		// Check if the HTML regex matches the content
-		if tech.HTML != nil && !searched {
+		if tech.HTML != nil {
 			switch html := tech.HTML.(type) {
 			case string:
 				matches, err := wp.matchingWithModification(html, content)
@@ -311,7 +320,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 		}
 
 		// Check if the script source matches the content
-		if tech.HTML != nil && !searched {
+		if tech.HTML != nil {
 			switch src := tech.ScriptSrc.(type) {
 			case string:
 				matches, err := wp.matchingWithModification(src, content)
@@ -347,7 +356,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 		}
 
 		// Dom search
-		if tech.Dom != nil && !searched {
+		if tech.Dom != nil {
 			// Create a reader from the byte array
 			reader := bytes.NewReader(body)
 
@@ -424,9 +433,44 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 	return result, nil
 }
 
+func (wp *Wappalyzer) suffleTechnologiesMap(technologies map[string]Technology) map[string]Technology {
+	// Extract keys into a slice and shuffle the slice
+	keys := make([]string, 0, len(technologies))
+	for key := range technologies {
+		keys = append(keys, key)
+	}
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+	rand.Shuffle(len(keys), func(i, j int) {
+		keys[i], keys[j] = keys[j], keys[i]
+	})
+
+	// Create a temporary slice to store the shuffled values
+	shuffledValues := make([]Technology, 0, len(technologies))
+	for _, key := range keys {
+		shuffledValues = append(shuffledValues, technologies[key])
+	}
+
+	// Assign the shuffled values back into the map
+	for i, key := range keys {
+		technologies[key] = shuffledValues[i]
+	}
+
+	return technologies
+}
+
 func (wp *Wappalyzer) appendToTechnology(websiteDetailTechnology []WebsiteDetailTechnology, technologyName string, matchesResults []string) []WebsiteDetailTechnology {
 	newWebsiteDetailTechnology := WebsiteDetailTechnology{
 		Name: technologyName,
+	}
+
+	for _, tech := range websiteDetailTechnology {
+		if tech.Name == technologyName && tech.Version != "" {
+			// Already exist
+			return websiteDetailTechnology
+		} else if tech.Name == technologyName {
+			newWebsiteDetailTechnology.Version = tech.Version
+			break
+		}
 	}
 
 	// Try to add version into the technology
