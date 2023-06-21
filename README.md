@@ -34,10 +34,18 @@ Note: This application only works on UNIX / LINUX like operating system
 ```
 
 # Supported Plugins
+| Catagories   | Plugines |
+|:-------------|:-------------|
+| Subdomain    | HackerTarget, LeakIX, AlienVault, Archive.org, RapidDNS, Urlscan.io, MassDNS<sup>*2</sup>, Brute forcing, CertSpotter, DuckDuckGo |
+| Web scanning | Wappalyzer |
+| Secret       | Github<sup>*1</sup> |
+| Email        | Email Format, PGP Scan, DuckDuckGo, Github<sup>*1</sup> |
 
+<sup>*1</sup> An API key is necessary for access.  
+<sup>*2</sup> Software installation is required.
 
 # TODO
-- [x] Port [Wappalyzer](https://github.com/wappalyzer/wappalyzer)
+
 
 # Note
 Run `golangci-lint run` before commit
