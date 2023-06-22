@@ -489,7 +489,7 @@ func (wp *Wappalyzer) appendToTechnology(websiteDetailTechnology []WebsiteDetail
 func (wp *Wappalyzer) matchingWithModification(pattern string, content string) (matchesResults []string, err error) {
 	// Go didn't support match group version \1 \2 \3, need to remove it (Tags (a non-standard syntax))
 	// Remove the \;version: and anything after its
-	parts := strings.Split(pattern, "\\;version:\\")
+	parts := strings.Split(pattern, "\\;version:")
 	pattern = parts[0]
 	parts = strings.Split(pattern, "\\;confidence:")
 	pattern = parts[0]
