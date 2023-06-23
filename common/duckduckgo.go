@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"oott/helper"
+	"oott/lib"
 	"strings"
 )
 
@@ -35,7 +36,9 @@ func (s *DuckDuckGo) DuckDuckGoSearch(domain string) (string, error) {
 	if s.TotalResults == "" {
 		url := fmt.Sprintf(s.API, domain)
 
-		client := &http.Client{}
+		client := &http.Client{
+			Transport: lib.HttpClientTransportSettings,
+		}
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			helper.ErrorPrintln(err)
@@ -145,7 +148,9 @@ func (s *DuckDuckGo) filterURLs(urls []string) []string {
 func (s *DuckDuckGo) fetchResponse(url string) string {
 	helper.VerbosePrintln("[-] Fetching seperated website from response:", url)
 
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: lib.HttpClientTransportSettings,
+	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		helper.ErrorPrintln(err)

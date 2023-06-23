@@ -11,7 +11,8 @@ import (
 
 func GetHttpStatusCode(url string) (string, error) {
 	client := http.Client{
-		Timeout: time.Second * 2,
+		Timeout:   time.Second * 2,
+		Transport: lib.HttpClientTransportSettings,
 	}
 
 	req, err := http.NewRequest("GET", url, nil)

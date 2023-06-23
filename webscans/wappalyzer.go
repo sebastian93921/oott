@@ -162,7 +162,8 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 	helper.InfoPrintln("[Wappalyzer] Start scanning URL:", url)
 
 	client := http.Client{
-		Timeout: time.Second * 2,
+		Timeout:   time.Second * 2,
+		Transport: lib.HttpClientTransportSettings,
 	}
 
 	result := WebsiteDetails{}
