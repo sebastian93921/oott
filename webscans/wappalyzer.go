@@ -408,6 +408,13 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 						searched = true
 					}
 				}
+			case map[string]interface{}:
+				for key, val := range dom {
+					elements := doc.Find(key)
+					if elements.Length() > 0 {
+						wp.processDomElements(name, domain, &result, val, elements)
+					}
+				}
 			}
 		}
 
@@ -437,6 +444,48 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 	}
 
 	return result, nil
+}
+
+func (wp *Wappalyzer) processDomElements(name string, domain string, result *WebsiteDetails, value interface{}, elements *goquery.Selection) {
+	switch subValue := value.(type) {
+	case map[string]interface{}:
+		for elekey, eleval := range subValue {
+			switch eleType := eleval.(type) {
+			case map[string]interface{}:
+				if elekey == "attributes" {
+					wp.processDomElements(name, domain, result, eleval, elements)
+					return
+				}
+				elements = elements.Find(elekey)
+				if elements.Length() > 0 {
+					wp.processDomElements(name, domain, result, eleval, elements)
+				}
+			case string:
+				elements.Each(func(_ int, s *goquery.Selection) {
+					for _, attr := range s.Nodes[0].Attr {
+						if elekey == attr.Key {
+							matches, err := wp.matchingWithModification(eleType, attr.Val)
+							if err != nil {
+								helper.ErrorPrintf("[!] Error matching Dom sub regex search for technology %s: %v\n", name, err)
+								helper.VerbosePrintln("[ERR > ]", s)
+							}
+							if len(matches) > 0 {
+								helper.InfoPrintf("[Wappalyzer] Domain [%s] Dom sub regex match for technology: %s\n", domain, name)
+								helper.VerbosePrintln(s, "->", matches)
+
+								result.DomainName = domain
+								result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
+							}
+						}
+					}
+				})
+			default:
+				return
+			}
+		}
+	default:
+		return
+	}
 }
 
 func (wp *Wappalyzer) suffleTechnologiesMap(technologies map[string]Technology) map[string]Technology {
@@ -489,12 +538,35 @@ func (wp *Wappalyzer) appendToTechnology(websiteDetailTechnology []WebsiteDetail
 }
 
 func (wp *Wappalyzer) matchingWithModification(pattern string, content string) (matchesResults []string, err error) {
+	var negativeLookAroundRegex []string
+
 	// Go didn't support match group version \1 \2 \3, need to remove it (Tags (a non-standard syntax))
 	// Remove the \;version: and anything after its
 	parts := strings.Split(pattern, "\\;version:")
 	pattern = parts[0]
 	parts = strings.Split(pattern, "\\;confidence:")
 	pattern = parts[0]
+
+	// This one first
+	negativeLookaheadRegex := `\(\?!\(.*?\)\/\)`
+	negativeLookaheadMatches := regexp.MustCompile(negativeLookaheadRegex).FindAllString(pattern, -1)
+	if len(negativeLookaheadMatches) > 0 {
+		for _, val := range negativeLookaheadMatches {
+			tmp := strings.ReplaceAll(val, "(?!(", "(")
+			tmp = strings.ReplaceAll(tmp, ")/)", ")")
+			negativeLookAroundRegex = append(negativeLookAroundRegex, tmp)
+			pattern = strings.Replace(pattern, val, "", 1)
+		}
+	}
+	// This after
+	negativeLookaheadRegex = `\(\?!.*?\)`
+	negativeLookaheadMatches = regexp.MustCompile(negativeLookaheadRegex).FindAllString(pattern, -1)
+	if len(negativeLookaheadMatches) > 0 {
+		for _, val := range negativeLookaheadMatches {
+			negativeLookAroundRegex = append(negativeLookAroundRegex, strings.ReplaceAll(val, "(?!", "("))
+			pattern = strings.Replace(pattern, val, "", 1)
+		}
+	}
 
 	// Compile the regex pattern
 	regex, err := regexp.Compile(pattern)
@@ -508,6 +580,20 @@ func (wp *Wappalyzer) matchingWithModification(pattern string, content string) (
 	// Remove empty of only have spaces
 	var result []string
 	for _, s := range submatches {
+		if len(negativeLookAroundRegex) > 0 {
+			for _, negativeLookPattern := range negativeLookAroundRegex {
+				// Compile the regex pattern
+				negRegex, err := regexp.Compile(negativeLookPattern)
+				if err != nil {
+					return nil, err
+				}
+				match := negRegex.FindString(s)
+				if match != "" {
+					helper.VerbosePrintln("[-] Negative lookup found:", s, " .Pattern:", negativeLookPattern)
+					s = ""
+				}
+			}
+		}
 		trimmed := strings.TrimSpace(s)
 		if trimmed != "" {
 			result = append(result, s)
