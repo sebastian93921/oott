@@ -521,19 +521,28 @@ func (wp *Wappalyzer) appendToTechnology(websiteDetailTechnology []WebsiteDetail
 		Name: technologyName,
 	}
 
-	for _, tech := range websiteDetailTechnology {
+	// Try to add version into the technology
+	if len(matchesResults) > 1 {
+		newWebsiteDetailTechnology.Version = matchesResults[1]
+	}
+
+	indexToDelete := -1
+	for i, tech := range websiteDetailTechnology {
 		if tech.Name == technologyName && tech.Version != "" {
 			// Already exist
 			return websiteDetailTechnology
+		} else if tech.Name == technologyName && tech.Version == "" && newWebsiteDetailTechnology.Version == "" {
+			// Already exist and no updates
+			return websiteDetailTechnology
 		} else if tech.Name == technologyName {
 			newWebsiteDetailTechnology.Version = tech.Version
+			indexToDelete = i
 			break
 		}
 	}
 
-	// Try to add version into the technology
-	if len(matchesResults) > 1 {
-		newWebsiteDetailTechnology.Version = matchesResults[1]
+	if indexToDelete != -1 {
+		websiteDetailTechnology = append(websiteDetailTechnology[:indexToDelete], websiteDetailTechnology[indexToDelete+1:]...)
 	}
 
 	websiteDetailTechnology = append(websiteDetailTechnology, newWebsiteDetailTechnology)
