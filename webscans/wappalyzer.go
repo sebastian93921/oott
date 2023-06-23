@@ -472,6 +472,12 @@ func (wp *Wappalyzer) processDomElements(name string, domain string, result *Web
 
 					// Stop searching
 					searched = true
+				} else if elekey == "text" {
+					// Text search
+					result := wp.processSearchByInterface("Dom text regex", name, domain, elements.Text(), result, eleval)
+					if result {
+						searched = true
+					}
 				} else {
 					// Attributes search
 					elements.Each(func(_ int, s *goquery.Selection) {
@@ -496,14 +502,6 @@ func (wp *Wappalyzer) processDomElements(name string, domain string, result *Web
 							}
 						}
 					})
-
-					// Text search
-					if elements.Length() > 0 {
-						result := wp.processSearchByInterface("Dom text regex", name, domain, elements.Text(), result, eleval)
-						if result {
-							searched = true
-						}
-					}
 				}
 			default:
 				return searched
