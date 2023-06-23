@@ -475,6 +475,9 @@ func (wp *Wappalyzer) processDomElements(name string, domain string, result *Web
 
 								result.DomainName = domain
 								result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
+
+								// Stop searching
+								return
 							}
 						}
 					}
