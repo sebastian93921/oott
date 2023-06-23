@@ -471,7 +471,7 @@ func (wp *Wappalyzer) processDomElements(name string, domain string, result *Web
 							}
 							if len(matches) > 0 {
 								helper.InfoPrintf("[Wappalyzer] Domain [%s] Dom sub regex match for technology: %s\n", domain, name)
-								helper.VerbosePrintln(s, "->", matches)
+								helper.VerbosePrintln("Dom Key:", elekey, "=", eleType, "->", matches)
 
 								result.DomainName = domain
 								result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
