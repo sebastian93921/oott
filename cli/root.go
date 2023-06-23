@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"oott/helper"
@@ -62,6 +63,11 @@ func Start() {
 		helper.ErrorPrintln("[!] Please provide the '-domain / -d' argument")
 		flag.PrintDefaults()
 		os.Exit(1)
+	} else {
+		// Trim unuses words
+		*domain = strings.TrimPrefix(*domain, "https://")
+		*domain = strings.TrimPrefix(*domain, "http://")
+		*domain = strings.TrimRight(*domain, "/")
 	}
 
 	// Read config file

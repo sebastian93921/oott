@@ -24,6 +24,7 @@ type Technology struct {
 	Description string                 `json:"description"`
 	Headers     map[string]string      `json:"headers"`
 	Meta        map[string]interface{} `json:"meta"`
+	Text        interface{}            `json:"text"`
 	HTML        interface{}            `json:"html"`
 	Dom         interface{}            `json:"dom"`
 	Icon        string                 `json:"icon"`
@@ -208,7 +209,6 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 					result.Technologies = wp.appendToTechnology(result.Technologies, name, nil)
 					searched = true
 				} else if expectedValue != "" {
-
 					matches, err := wp.matchingWithModification(expectedValue, actualValue)
 					if err != nil {
 						helper.ErrorPrintf("[!] Error matching header regex for technology %s: %v\n", name, err)
@@ -286,75 +286,25 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 
 		// Check if the HTML regex matches the content
 		if tech.HTML != nil {
-			switch html := tech.HTML.(type) {
-			case string:
-				matches, err := wp.matchingWithModification(html, content)
-				if err != nil {
-					helper.ErrorPrintf("[!] Error matching HTML regex for technology %s: %v\n", name, err)
-					helper.VerbosePrintln("[ERR > ]", html)
-				}
-				if len(matches) > 0 {
-					helper.InfoPrintf("[Wappalyzer] Domain [%s] HTML regex matched for technology: %s\n", domain, name)
-					helper.VerbosePrintln(html, "->", matches)
-
-					result.DomainName = domain
-					result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
-					searched = true
-				}
-			case []interface{}:
-				for _, s := range html {
-					converted := fmt.Sprint(s)
-					matches, err := wp.matchingWithModification(converted, content)
-					if err != nil {
-						helper.ErrorPrintf("[!] Error matching HTML regex for technology %s: %v\n", name, err)
-						helper.VerbosePrintln("[ERR > ]", s)
-					}
-					if len(matches) > 0 {
-						helper.InfoPrintf("[Wappalyzer] Domain [%s] HTML regex matched for technology: %s\n", domain, name)
-						helper.VerbosePrintln(s, "->", matches)
-
-						result.DomainName = domain
-						result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
-						searched = true
-					}
-				}
+			result := wp.processSearchByInterface("HTML regex", name, domain, content, &result, tech.HTML)
+			if result {
+				searched = true
 			}
 		}
 
 		// Check if the script source matches the content
 		if tech.ScriptSrc != nil {
-			switch src := tech.ScriptSrc.(type) {
-			case string:
-				matches, err := wp.matchingWithModification(src, content)
-				if err != nil {
-					helper.ErrorPrintf("[!] Error matching script source regex for technology %s: %v\n", name, err)
-					helper.VerbosePrintln("[ERR > ]", src)
-				}
-				if len(matches) > 0 {
-					helper.InfoPrintf("[Wappalyzer] Domain [%s] Script source regex matched for technology: %s\n", domain, name)
-					helper.VerbosePrintln(src, "->", matches)
+			result := wp.processSearchByInterface("Script source regex", name, domain, content, &result, tech.ScriptSrc)
+			if result {
+				searched = true
+			}
+		}
 
-					result.DomainName = domain
-					result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
-					searched = true
-				}
-			case []interface{}:
-				for _, s := range src {
-					converted := fmt.Sprint(s)
-					matches, err := wp.matchingWithModification(converted, content)
-					if err != nil {
-						helper.ErrorPrintf("[!] Error matching script source regex for technology %s: %v\n", name, err)
-						helper.VerbosePrintln("[ERR > ]", s)
-					}
-					if len(matches) > 0 {
-						helper.InfoPrintf("[Wappalyzer] Domain [%s] Script source regex matched for technology: %s\n", domain, name)
-						helper.VerbosePrintln(s, "->", matches)
-
-						result.DomainName = domain
-						result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
-						searched = true
-					}
-				}
+		// Check if the script source matches the content
+		if tech.Text != nil {
+			result := wp.processSearchByInterface("Text regex", name, domain, content, &result, tech.Text)
+			if result {
+				searched = true
 			}
 		}
 
@@ -412,7 +362,10 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 				for key, val := range dom {
 					elements := doc.Find(key)
 					if elements.Length() > 0 {
-						wp.processDomElements(name, domain, &result, val, elements)
+						result := wp.processDomElements(name, domain, &result, val, elements)
+						if result {
+							searched = true
+						}
 					}
 				}
 			}
@@ -446,49 +399,119 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 	return result, nil
 }
 
-func (wp *Wappalyzer) processDomElements(name string, domain string, result *WebsiteDetails, value interface{}, elements *goquery.Selection) {
+func (wp *Wappalyzer) processSearchByInterface(methodName, name, domain, content string, result *WebsiteDetails, source interface{}) bool {
+	searched := false
+	switch src := source.(type) {
+	case string:
+		matches, err := wp.matchingWithModification(src, content)
+		if err != nil {
+			helper.ErrorPrintf("[!] Error matching %s for technology %s: %v\n", methodName, name, err)
+			helper.VerbosePrintln("[ERR > ]", src)
+		}
+		if len(matches) > 0 {
+			helper.InfoPrintf("[Wappalyzer] Domain [%s] %s matched for technology: %s\n", domain, methodName, name)
+			helper.VerbosePrintln(src, "->", matches)
+
+			result.DomainName = domain
+			result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
+			searched = true
+		}
+	case []interface{}:
+		for _, s := range src {
+			converted := fmt.Sprint(s)
+			matches, err := wp.matchingWithModification(converted, content)
+			if err != nil {
+				helper.ErrorPrintf("[!] Error matching %s for technology %s: %v\n", methodName, name, err)
+				helper.VerbosePrintln("[ERR > ]", s)
+			}
+			if len(matches) > 0 {
+				helper.InfoPrintf("[Wappalyzer] Domain [%s] %s matched for technology: %s\n", domain, methodName, name)
+				helper.VerbosePrintln(s, "->", matches)
+
+				result.DomainName = domain
+				result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
+				searched = true
+			}
+		}
+	}
+
+	return searched
+}
+
+func (wp *Wappalyzer) processDomElements(name string, domain string, result *WebsiteDetails, value interface{}, elements *goquery.Selection) bool {
+	searched := false
 	switch subValue := value.(type) {
 	case map[string]interface{}:
 		for elekey, eleval := range subValue {
 			switch eleType := eleval.(type) {
 			case map[string]interface{}:
-				if elekey == "attributes" {
-					wp.processDomElements(name, domain, result, eleval, elements)
-					return
+				if elekey == "attributes" || elekey == "text" {
+					searched = wp.processDomElements(name, domain, result, eleval, elements)
 				}
 				elements = elements.Find(elekey)
 				if elements.Length() > 0 {
-					wp.processDomElements(name, domain, result, eleval, elements)
+					searched = wp.processDomElements(name, domain, result, eleval, elements)
 				}
 			case string:
-				elements.Each(func(_ int, s *goquery.Selection) {
-					for _, attr := range s.Nodes[0].Attr {
-						if elekey == attr.Key {
-							matches, err := wp.matchingWithModification(eleType, attr.Val)
-							if err != nil {
-								helper.ErrorPrintf("[!] Error matching Dom sub regex search for technology %s: %v\n", name, err)
-								helper.VerbosePrintln("[ERR > ]", s)
+				if elekey == "exists" {
+					helper.InfoPrintf("[Wappalyzer] Domain [%s] Dom search exists for technology: %s\n", domain, name)
+
+					// Debug log
+					if lib.Config.VerboseMode {
+						helper.VerbosePrintln("Dom Key:", elekey, "=", eleType)
+						elements.Each(func(i int, element *goquery.Selection) {
+							for _, node := range element.Nodes {
+								helper.VerbosePrintln(node)
 							}
-							if len(matches) > 0 {
-								helper.InfoPrintf("[Wappalyzer] Domain [%s] Dom sub regex match for technology: %s\n", domain, name)
-								helper.VerbosePrintln("Dom Key:", elekey, "=", eleType, "->", matches)
+						})
+					}
 
-								result.DomainName = domain
-								result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
+					result.DomainName = domain
+					result.Technologies = wp.appendToTechnology(result.Technologies, name, nil)
 
-								// Stop searching
-								return
+					// Stop searching
+					searched = true
+				} else {
+					// Attributes search
+					elements.Each(func(_ int, s *goquery.Selection) {
+						for _, attr := range s.Nodes[0].Attr {
+							if elekey == attr.Key {
+								matches, err := wp.matchingWithModification(eleType, attr.Val)
+								if err != nil {
+									helper.ErrorPrintf("[!] Error matching Dom sub regex search for technology %s: %v\n", name, err)
+									helper.VerbosePrintln("[ERR > ]", s)
+								}
+								if len(matches) > 0 {
+									helper.InfoPrintf("[Wappalyzer] Domain [%s] Dom sub regex match for technology: %s\n", domain, name)
+									helper.VerbosePrintln("Dom Key:", elekey, "=", eleType, "->", matches)
+
+									result.DomainName = domain
+									result.Technologies = wp.appendToTechnology(result.Technologies, name, matches)
+
+									// Stop searching
+									searched = true
+									return
+								}
 							}
 						}
+					})
+
+					// Text search
+					if elements.Length() > 0 {
+						result := wp.processSearchByInterface("Dom text regex", name, domain, elements.Text(), result, eleval)
+						if result {
+							searched = true
+						}
 					}
-				})
+				}
 			default:
-				return
+				return searched
 			}
 		}
 	default:
-		return
+		return searched
 	}
+	return searched
 }
 
 func (wp *Wappalyzer) suffleTechnologiesMap(technologies map[string]Technology) map[string]Technology {
