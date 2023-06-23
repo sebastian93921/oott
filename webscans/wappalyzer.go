@@ -158,6 +158,8 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 }
 
 func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technologies map[string]Technology) (WebsiteDetails, error) {
+	helper.InfoPrintln("[Wappalyzer] Start scanning URL:", url)
+
 	client := http.Client{
 		Timeout: time.Second * 2,
 	}
@@ -182,7 +184,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 	// Read the response content
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Failed to read response body:", err)
+		helper.ErrorPrintln("[!] Failed to read response body:", err)
 		return result, err
 	}
 	content := string(body)
