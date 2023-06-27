@@ -42,8 +42,8 @@ Note: This application only works on UNIX / LINUX like operating system
 | Email        | Email Format, PGP Scan, DuckDuckGo, Github<sup>*1</sup> |
 
 <sup>*1</sup> An API key is necessary for access.  
-<sup>*2</sup> Software installation is required.
-<sup>*3</sup> Does not support browser-like functionality.
+<sup>*2</sup> Software installation is required.  
+<sup>*3</sup> Does not support browser-like functionality.  
 
 # TODO
 
