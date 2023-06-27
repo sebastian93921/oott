@@ -31,7 +31,7 @@ func GetHttpStatusCode(url string) (string, error) {
 	return strconv.Itoa(resp.StatusCode), nil
 }
 
-func OutputCsv(data [][]string) (string, error) {
+func OutputCsv(category string, data [][]string) (string, error) {
 	// Create folder if not exists
 	err := os.MkdirAll(lib.Config.Tmpfolder+"result/", os.ModePerm)
 	if err != nil {
@@ -39,7 +39,7 @@ func OutputCsv(data [][]string) (string, error) {
 		return "", err
 	}
 
-	filename := lib.Config.Tmpfolder + "result/oott_subdomain-scan_" + getUnixTimestamp() + ".csv"
+	filename := lib.Config.Tmpfolder + "result/oott_" + category + "_" + getUnixTimestamp() + ".csv"
 
 	file, err := os.Create(filename)
 	if err != nil {

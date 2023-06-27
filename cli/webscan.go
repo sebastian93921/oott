@@ -60,20 +60,34 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 	}
 
 	helper.InfoPrintln("========================================================================================>")
+	csvData := [][]string{
+		{"Domain", "Technology", "Source"},
+	}
+
 	// Results
 	for _, result := range websiteResults {
 		helper.ResultPrintf("Domain: %-40s Source: %s\n", result.DomainName, result.Source)
 
 		for _, technology := range result.Technologies {
-			helper.ResultPrintf("  +- %s", technology.Name)
+			technologyName := technology.Name
 			if technology.Version != "" {
-				helper.ResultPrintf(" (%s)", technology.Version)
+				technologyName += fmt.Sprintf(" (%s)", technology.Version)
 			}
-			helper.ResultPrintln()
+			helper.ResultPrintf("  +- %s\n", technologyName)
+
+			// Add to csvData
+			csvData = append(csvData, []string{result.DomainName, technologyName, result.Source})
 		}
 		helper.ResultPrintln(">> Total:", len(result.Technologies), "\n")
 	}
 	helper.InfoPrintln("<========================================================================================")
+
+	if !lib.Config.NoExport {
+		filename, err := helper.OutputCsv("webscan", csvData)
+		if err == nil {
+			helper.ResultPrintln("[+] Please find CSV file in", filename)
+		}
+	}
 	helper.InfoPrintln("[+] End of web scan")
 
 	return websiteResults

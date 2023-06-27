@@ -119,7 +119,7 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 	helper.InfoPrintln("[+] End of subdomains scan")
 
 	if !lib.Config.NoExport {
-		filename, err := helper.OutputCsv(csvData)
+		filename, err := helper.OutputCsv("subdomain_scan", csvData)
 		if err == nil {
 			helper.ResultPrintln("[+] Please find CSV file in", filename)
 		}
