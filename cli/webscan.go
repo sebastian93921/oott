@@ -61,12 +61,12 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 
 	helper.InfoPrintln("========================================================================================>")
 	csvData := [][]string{
-		{"Domain", "Technology", "Source"},
+		{"Domain", "Technology", "Status Code", "Source"},
 	}
 
 	// Results
 	for _, result := range websiteResults {
-		helper.ResultPrintf("Domain: %-40s Source: %s\n", result.DomainName, result.Source)
+		helper.ResultPrintf("Domain: %-40s Status Code: %-6s Source: %s\n", result.DomainName, result.StatusCode, result.Source)
 
 		for _, technology := range result.Technologies {
 			technologyName := technology.Name
@@ -76,7 +76,7 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 			helper.ResultPrintf("  +- %s\n", technologyName)
 
 			// Add to csvData
-			csvData = append(csvData, []string{result.DomainName, technologyName, result.Source})
+			csvData = append(csvData, []string{result.DomainName, technologyName, result.StatusCode, result.Source})
 		}
 		helper.ResultPrintln(">> Total:", len(result.Technologies), "\n")
 	}

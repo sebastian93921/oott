@@ -7,6 +7,7 @@ type WebScanner interface {
 type WebsiteDetails struct {
 	DomainName   string
 	Technologies []WebsiteDetailTechnology
+	StatusCode   string
 	Source       string
 }
 

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -193,6 +194,9 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 
 	// Suffle technologies
 	technologies = wp.suffleTechnologiesMap(technologies)
+
+	// Assign status code to result
+	result.StatusCode = strconv.Itoa(resp.StatusCode)
 
 	// Search for technologies based on HTML regex or script source
 	for name, tech := range technologies {
