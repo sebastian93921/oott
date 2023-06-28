@@ -15,7 +15,6 @@ Note: This application only works on UNIX / LINUX like operating system
 ```
 
 ## Web scanning
-Timeout period is 10 seconds.
 ```
 # Basic scanning
 ./oott -d example.com -web-scan
