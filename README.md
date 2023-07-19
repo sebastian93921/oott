@@ -1,7 +1,17 @@
 # OOTT - OSINT Offensive Toolkit
-Note: This application only works on UNIX / LINUX like operating system
+OSINT Tools suits for pentesters and for security assessment
+![demo](https://github.com/sebastian93921/oott/assets/4918219/a6e23db5-5e8c-4f2d-870a-084434ebbfe1)
+Note: This application only works on UNIX / LINUX-like operating system
+
 
 # Usage Example
+## Local file scanning
+```
+# Secrets scanning
+./oott -localscan
+./oott -localscan -lp /tmp/
+```
+
 ## Sub-domain scanning
 ```
 # Basic scanning
@@ -20,7 +30,7 @@ Note: This application only works on UNIX / LINUX like operating system
 ./oott -d example.com -web-scan
 
 # Web scan combine with subdomain scan
-./oott -d example.com -subdomain-scan -fast-scan -http-status-scan
+./oott -d example.com -subdomain-scan -fast-scan -http-status-scan -web-scan
 ```
 
 ## Secret scanning
