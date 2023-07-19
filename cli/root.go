@@ -9,6 +9,7 @@ import (
 
 	"oott/helper"
 	"oott/lib"
+	"oott/localscan"
 	"oott/subdomains"
 )
 
@@ -49,6 +50,10 @@ func Start() {
 	flag.BoolVar(&lib.Config.VerboseMode, "verbose", false, "Enable verbose mode")
 	flag.BoolVar(&lib.Config.VerboseMode, "v", false, "Enable verbose mode (shorthand)")
 
+	// Util
+	flag.BoolVar(&lib.Config.LocalScanOnly, "localscan", false, "Perform local scanning only.")
+	flag.StringVar(&lib.Config.LocalScanPath, "lp", ".", "Local scanning path.")
+
 	flag.Parse()
 
 	if lib.Config.Help {
@@ -59,8 +64,14 @@ func Start() {
 		os.Exit(0)
 	}
 
+	// Local Scan first
+	if lib.Config.LocalScanOnly {
+		localscan.StartLocalSecretsScanOnly()
+		os.Exit(0)
+	}
+
 	if *domain == "" {
-		helper.ErrorPrintln("[!] Please provide the '-domain / -d' argument")
+		helper.ErrorPrintln("[!] Please provide the '-domain / -d' argument or -localscan for performing local scanning")
 		flag.PrintDefaults()
 		os.Exit(1)
 	} else {

@@ -25,6 +25,9 @@ type Configuration struct {
 	GitHubAPIToken string
 
 	WebScan bool
+
+	LocalScanOnly bool
+	LocalScanPath string
 }
 
 var Config Configuration = Configuration{

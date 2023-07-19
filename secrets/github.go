@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"oott/common"
+	"oott/defaults"
 	"oott/helper"
 	"oott/lib"
 )
@@ -33,7 +34,7 @@ func (s *Github) ScanSecrets(domain string) ([]SecretDetails, error) {
 	helper.InfoPrintln("[+] Scanning subdomains on Github:", domain)
 
 	// Read patterns
-	fileBytes, err := secretpatternsEmbed.ReadFile("secretpatterns.json")
+	fileBytes, err := defaults.SecretpatternsEmbed.ReadFile("secretpatterns.json")
 	if err != nil {
 		helper.ErrorPrintf("[!] Error reading the pattern file: %s\n", err.Error())
 		return nil, err

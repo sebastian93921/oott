@@ -1,7 +1,6 @@
 package secrets
 
 import (
-	"embed"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,9 +21,6 @@ type SecretDetails struct {
 
 // Cancel Sign handling
 var cancel = make(chan struct{})
-
-//go:embed secretpatterns.json
-var secretpatternsEmbed embed.FS
 
 // Use `defer CloseInterruptHandler()` for housekeeping the signal
 func CreateInterruptHandler() {

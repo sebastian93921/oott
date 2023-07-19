@@ -2,12 +2,13 @@ package secrets
 
 import (
 	"encoding/json"
+	"oott/defaults"
 	"testing"
 )
 
 func testReadSecretPatterns() map[string]string {
 	// Read patterns
-	fileBytes, err := secretpatternsEmbed.ReadFile("secretpatterns.json")
+	fileBytes, err := defaults.SecretpatternsEmbed.ReadFile("secretpatterns.json")
 	if err != nil {
 		return nil
 	}
