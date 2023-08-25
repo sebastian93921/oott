@@ -331,6 +331,21 @@
     "scriptSrc": "ls\\.unveilhooks(?:\\.min)?\\.js",
     "website": "https://github.com/aFarkas/lazysizes/tree/gh-pages/plugins/unveilhooks"
   },
+  "LeadChat": {
+    "cats": [
+      53
+    ],
+    "description": "LeadChat offers live-operators and CRM solutions that utilise LiveChat chat software to facilitate real-time engagement with website visitors for businesses.",
+    "icon": "LeadChat.svg",
+    "pricing": [
+      "recurring",
+      "payg",
+      "poa"
+    ],
+    "requires": "LiveChat",
+    "scriptSrc": "(?://|\\.)chatsystem\\.io/",
+    "website": "https://www.leadchat.com"
+  },
   "Leadfeeder": {
     "cats": [
       10
@@ -434,6 +449,28 @@
     "saas": true,
     "scriptSrc": "npm/leanplum-sdk\\@([\\d.]+)\\;version:\\1",
     "website": "https://www.leanplum.com"
+  },
+  "LearnDash": {
+    "cats": [
+      21,
+      87
+    ],
+    "description": "LearnDash is a WordPress plugin that enables the creation and management of online courses, quizzes, and educational content within a website.",
+    "icon": "LearnDash.svg",
+    "dom": {
+      "link[href*='/wp-content/plugins/sfwd-lms/']": {
+        "attributes": {
+          "href": "/wp-content/plugins/sfwd-lms/.+\\.css(?:\\?ver=(\\d+(?:\\.\\d+)+))?\\;version:\\1"
+        }
+      }
+    },
+    "requires": "WordPress",
+    "pricing": [
+      "low",
+      "onetime",
+      "recurring"
+    ],
+    "website": "https://www.learndash.com"
   },
   "LearnWorlds": {
     "cats": [
@@ -753,7 +790,7 @@
     "cpe": "cpe:2.3:a:lightbox_photo_gallery_project:lightbox_photo_gallery:*:*:*:*:*:*:*:*",
     "description": "Lightbox is small javascript library used to overlay images on top of the current page.",
     "dom": {
-      "link[href*='lightbox]": {
+      "link[href*='lightbox']": {
         "attributes": {
           "href": "/lightbox(?:\\.min)?\\.css"
         }
@@ -1360,6 +1397,22 @@
     "scriptSrc": "livewire(?:\\.min)?\\.js",
     "website": "https://laravel-livewire.com"
   },
+  "LlamaLink Cloud Server": {
+    "cats": [
+      22
+    ],
+    "description": "LlamaLink Cloud Server is a custom dynamic web server based on Nginx Web server that load balance user traffic between hosting nodes and allows fast and cached experience to web and app users.",
+    "headers": {
+      "Server": "^LlamaLink"
+    },
+    "icon": "LlamaLink.png",
+    "implies": "Nginx",
+    "pricing": [
+      "payg",
+      "recurring"
+    ],
+    "website": "https://llamalink.net"
+  },
   "Loadable-Components": {
     "cats": [
       59
@@ -1465,6 +1518,23 @@
     },
     "scriptSrc": "lodash.*\\.js",
     "website": "https://www.lodash.com"
+  },
+  "Loglib": {
+    "cats": [
+      10
+    ],
+    "description": "Loglib is a Open Source and Privacy-First web analytics that aims to provide simple yet can be powerful based on your needs.",
+    "icon": "Loglib.svg",
+    "js": {
+      "lli": "",
+      "llc": ""
+    },
+    "pricing": [
+      "freemium"
+    ],
+    "oss": true,
+    "saas": true,
+    "website": "https://www.loglib.io"
   },
   "LogRocket": {
     "cats": [
@@ -1717,12 +1787,10 @@
   },
   "Loox": {
     "cats": [
-      90,
-      100
+      90
     ],
     "description": "Loox is a reviews app for Shopify that helps you gather reviews and user-generated photos from your customers.",
     "icon": "Loox.svg",
-    "implies": "Shopify",
     "js": {
       "loox_global_hash": ""
     },
@@ -1865,6 +1933,19 @@
       "Luigis": ""
     },
     "website": "https://www.luigisbox.com"
+  },
+  "Lume": {
+    "cats": [
+      57
+    ],
+    "description": "Lume is a static site generator based on Deno.",
+    "icon": "Lume.svg",
+    "implies": "Deno",
+    "meta": {
+      "generator": "^Lume\\sv([\\d\\.]+)$\\;version:\\1"
+    },
+    "oss": true,
+    "website": "https://lume.land"
   },
   "Luna": {
     "cats": [
