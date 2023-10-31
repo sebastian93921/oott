@@ -65,11 +65,19 @@ func scanDirectory(directoryPath string, patterns map[string]string) []string {
 				return err
 			}
 
-			// Check if the file matches any pattern
-			for patternName, compiledPattern := range compiledPatterns {
-				if compiledPattern.Match(fileContent) {
-					matchedFiles = append(matchedFiles, fmt.Sprintf("Matched pattern \"%s\" in file: %s", patternName, filePath))
-					break
+			// Convert byte slice to string
+			content := string(fileContent)
+
+			// Split the content by newline
+			lines := strings.Split(content, "\n")
+
+			for lineNum, line := range lines {
+				lineNumber := lineNum + 1
+				// Check if the file matches any pattern
+				for patternName, compiledPattern := range compiledPatterns {
+					if compiledPattern.MatchString(line) {
+						matchedFiles = append(matchedFiles, fmt.Sprintf("Matched pattern \"%s\" in file: %s Line: %d", patternName, filePath, lineNumber))
+					}
 				}
 			}
 		}
