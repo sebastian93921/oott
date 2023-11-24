@@ -52,6 +52,10 @@ func Start() {
 	flag.BoolVar(&lib.Config.VerboseMode, "verbose", false, "Enable verbose mode")
 	flag.BoolVar(&lib.Config.VerboseMode, "v", false, "Enable verbose mode (shorthand)")
 
+	// Config
+	outputDir := flag.String("output", "", "Output directory path for writing the output to as a folder.")
+	flag.StringVar(outputDir, "o", "", "Output directory path for writing the output to as a folder. (shorthand)")
+
 	// Util
 	flag.BoolVar(&lib.Config.LocalScanOnly, "localscan", false, "Perform local scanning only.")
 	flag.StringVar(&lib.Config.LocalScanPath, "lp", ".", "Local scanning path.")
@@ -90,6 +94,9 @@ func Start() {
 	helper.VerbosePrintln("[-] Verbose mode is enabled, resulting in more detailed console output.")
 
 	// Create folder if not exists
+	if _, err := os.Stat(*outputDir); !os.IsNotExist(err) && *outputDir != "" {
+		lib.Config.Tmpfolder = *outputDir + "/oott-output/" // Make sure to create files inside the directory
+	}
 	err := os.MkdirAll(lib.Config.Tmpfolder, os.ModePerm)
 	if err != nil {
 		helper.ErrorPrintln("[!] Error creating download directory:", err)

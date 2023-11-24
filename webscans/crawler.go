@@ -265,7 +265,11 @@ func (c *Crawler) diffDirectories(domain, dir1, dir2 string) error {
 
 			// Check if file exists in the second directory
 			if _, err := os.Stat(pathInDir2); os.IsNotExist(err) {
-				helper.InfoPrintf("[-] File %s does not exist in %s\n", relPath, dir2)
+				url := domain + "/" + relPath
+				if strings.HasSuffix(url, "index") {
+					url = url[:len(url)-6] // Remove "/index"
+				}
+				helper.ResultPrintln("[!] URL %s [%s] does not exist in %s\n", url, relPath, dir2)
 				return nil
 			}
 
