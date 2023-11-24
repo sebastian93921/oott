@@ -5,10 +5,12 @@ type WebScanner interface {
 }
 
 type WebsiteDetails struct {
-	DomainName   string
-	Technologies []WebsiteDetailTechnology
-	StatusCode   string
-	Source       string
+	DomainName     string
+	Technologies   []WebsiteDetailTechnology
+	StatusCode     string
+	Source         string
+	Urls           []string
+	CrawlDirectory string
 }
 
 type WebsiteDetailTechnology struct {

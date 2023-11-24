@@ -87,6 +87,7 @@ func (wp *Wappalyzer) downloadJSON(url, filePath string) ([]byte, error) {
 
 func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 	baseURL := "https://raw.githubusercontent.com/wappalyzer/wappalyzer/master/src/technologies/"
+	skipDownload := true // Wappalyzer doesn't open their github projects now
 
 	// Map to store the technologies
 	technologies := make(map[string]Technology)
@@ -101,11 +102,21 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 		fileName := string(c) + ".json"
 		url := baseURL + fileName
 
-		data, err := wp.downloadJSON(url, lib.Config.Tmpfolder+fileName)
-		if err != nil {
-			helper.ErrorPrintf("[!] Error downloading JSON file %s. Read the default files... Error: %v\n", fileName, err)
+		var data []byte
+		var err error
+		if !skipDownload {
+			data, err = wp.downloadJSON(url, lib.Config.Tmpfolder+fileName)
+			if err != nil {
+				helper.ErrorPrintf("[!] Error downloading JSON file %s. Read the default files... Error: %v\n", fileName, err)
 
-			// Incase network issue, read local one
+				// Incase network issue, read local one
+				data, err = defaults.EmbeddedWappalyzerFiles.ReadFile("wappalyzer/" + fileName)
+				if err != nil {
+					helper.ErrorPrintf("[!] Error reading embedded file:", err)
+					return nil, err
+				}
+			}
+		} else {
 			data, err = defaults.EmbeddedWappalyzerFiles.ReadFile("wappalyzer/" + fileName)
 			if err != nil {
 				helper.ErrorPrintf("[!] Error reading embedded file:", err)

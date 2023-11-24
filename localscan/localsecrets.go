@@ -74,11 +74,7 @@ func scanDirectory(directoryPath string, patterns map[string]string) []string {
 			for lineNum, line := range lines {
 				lineNumber := lineNum + 1
 				// Check if the file matches any pattern
-				for patternName, compiledPattern := range compiledPatterns {
-					if compiledPattern.MatchString(line) {
-						matchedFiles = append(matchedFiles, fmt.Sprintf("Matched pattern \"%s\" in file: %s Line: %d", patternName, filePath, lineNumber))
-					}
-				}
+				matchedFiles = append(matchedFiles, checkByPattern(line, lineNumber, filePath, compiledPatterns)...)
 			}
 		}
 
@@ -90,6 +86,47 @@ func scanDirectory(directoryPath string, patterns map[string]string) []string {
 	}
 
 	return matchedFiles
+}
+
+func checkByPattern(line string, lineNumber int, filePath string, compiledPatterns map[string]*regexp.Regexp) []string {
+	matchedFiles := make([]string, 0)
+	// Check if the file matches any pattern
+	for patternName, compiledPattern := range compiledPatterns {
+		if compiledPattern.MatchString(line) {
+			matchedFiles = append(matchedFiles, fmt.Sprintf("Matched pattern \"%s\" in file: %s Line: %d", patternName, filePath, lineNumber))
+		}
+	}
+	return matchedFiles
+}
+
+func StringArrayScanning(content []string, filePath string) ([]string, error) {
+	// Read patterns
+	fileBytes, err := defaults.SecretpatternsEmbed.ReadFile("secretpatterns.json")
+	if err != nil {
+		helper.ErrorPrintf("Error reading the pattern file: %s\n", err.Error())
+		return nil, err
+	}
+
+	patterns := make(map[string]string)
+	err = json.Unmarshal(fileBytes, &patterns)
+	if err != nil {
+		helper.ErrorPrintf("Failed to decode pattern file. Error: %v\n", err)
+		return nil, err
+	}
+
+	compiledPatterns := make(map[string]*regexp.Regexp)
+	for patternName, pattern := range patterns {
+		compiledPattern := regexp.MustCompile(pattern)
+		compiledPatterns[patternName] = compiledPattern
+	}
+
+	matchedFiles := make([]string, 0)
+	for _, content := range content {
+		// Check if the file matches any pattern
+		matchedFiles = append(matchedFiles, checkByPattern(content, 0, filePath, compiledPatterns)...)
+	}
+
+	return matchedFiles, nil
 }
 
 func StartLocalSecretsScanOnly() {

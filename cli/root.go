@@ -40,9 +40,11 @@ func Start() {
 	flag.StringVar(&lib.Config.CustomWordlist, "wordlist", "", "Customize wordlist, please use full path for your customize wordlist. eg. wordlist.txt")
 
 	flag.BoolVar(&lib.Config.SecretScan, "secret-scan", false, "Perform secrets scanning by domain name.")
+	flag.BoolVar(&lib.Config.SecretScan, "s", false, "Perform secrets scanning by domain name. (shorthand)")
 	flag.StringVar(&lib.Config.SearchKeywords, "key-words", "", "Add more keywords in searching. eg. test,test2,test3 - Only valid on Secret scanning")
 
-	flag.BoolVar(&lib.Config.WebScan, "web-scan", false, "Perform web scanning")
+	flag.BoolVar(&lib.Config.WebScan, "web-scan", false, "Perform web scanning.")
+	flag.BoolVar(&lib.Config.WebScan, "w", false, "Perform web scanning. (shorthand)")
 
 	flag.IntVar(&lib.Config.ConcurrentRunningThread, "threads", 500, "Maximum number of Concurrent thread uses.")
 	flag.IntVar(&lib.Config.ConcurrentRunningThread, "t", 500, "Maximum number of Concurrent thread uses (shorthand).")

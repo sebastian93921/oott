@@ -24,3 +24,7 @@ go.work
 config.json
 filtering.txt
 wordlist.txt
+agg/
+first.cast
+oott
+.vscode/launch.json

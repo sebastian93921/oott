@@ -28,6 +28,8 @@ type Configuration struct {
 
 	LocalScanOnly bool
 	LocalScanPath string
+
+	Crawling bool
 }
 
 var Config Configuration = Configuration{

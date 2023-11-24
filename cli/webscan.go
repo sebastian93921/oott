@@ -32,6 +32,7 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 	domains = distinctArray
 
 	webscanners := []webscans.WebScanner{
+		&webscans.Crawler{},
 		&webscans.Wappalyzer{},
 		// Add more WebScanner implementations here
 	}
@@ -46,7 +47,7 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 	}
 	helper.InfoPrintln("<========================================================================================")
 	helper.InfoPrintln("If you agree the uses of modules, press Enter to continue...")
-	fmt.Scanln()
+	// fmt.Scanln()
 
 	var websiteResults []webscans.WebsiteDetails
 	for _, sf := range webscanners {
@@ -78,7 +79,12 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 			// Add to csvData
 			csvData = append(csvData, []string{result.DomainName, technologyName, result.StatusCode, result.Source})
 		}
-		helper.ResultPrintln(">> Total:", len(result.Technologies), "\n")
+
+		for _, urls := range result.Urls {
+			helper.ResultPrintf("    +- URL: %-100s\n", urls)
+		}
+
+		helper.ResultPrintln(">> Total Tech/Urls:", len(result.Technologies), "/", len(result.Urls), ", Files saved on:", result.CrawlDirectory, "\n")
 	}
 	helper.InfoPrintln("<========================================================================================")
 
