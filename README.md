@@ -46,7 +46,7 @@ Note: This application only works on UNIX / LINUX-like operating system
 # Supported Plugins
 | Catagories   | Plugines |
 |:-------------|:-------------|
-| Subdomain    | HackerTarget, LeakIX, AlienVault, Archive.org, RapidDNS, Urlscan.io, MassDNS<sup>*2</sup>, Brute forcing, CertSpotter, DuckDuckGo |
+| Subdomain    | Brute forcing, HackerTarget, LeakIX, AlienVault, Archive.org, RapidDNS, Urlscan.io, MassDNS<sup>*2</sup>, CertSpotter, DuckDuckGo |
 | Web scanning | Web Crawler, Wappalyzer<sup>*3</sup> |
 | Secret       | Github<sup>*1</sup> |
 | Email        | Email Format, PGP Scan, DuckDuckGo, Github<sup>*1</sup> |
