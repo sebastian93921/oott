@@ -27,5 +27,5 @@ func PrettyJson(input []byte) (string, error) {
 		return "", err
 	}
 
-	return string(prettyJSON.Bytes()), nil
+	return prettyJSON.String(), nil
 }

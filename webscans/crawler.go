@@ -90,7 +90,10 @@ func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 		if err := os.MkdirAll(websiteDetail.CrawlDirectory+".diff", 0755); err != nil {
 			return nil, err
 		}
-		c.diffDirectories(domain, websiteDetail.CrawlDirectory, websiteDetail.CrawlDirectory+".old")
+		err = c.diffDirectories(domain, websiteDetail.CrawlDirectory, websiteDetail.CrawlDirectory+".old")
+		if err != nil {
+			helper.ErrorPrintln("[!] Error on diff directory", err)
+		}
 
 		websiteDetails = append(websiteDetails, *websiteDetail)
 
@@ -243,7 +246,7 @@ func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString strin
 		if err == nil {
 			urls = append(urls, newUrls...)
 		} else {
-			helper.ErrorPrintln("ERROR:", err)
+			helper.ErrorPrintln("[!] Error on crawling:", err)
 		}
 	}
 	return urls, nil
