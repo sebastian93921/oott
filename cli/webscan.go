@@ -60,14 +60,41 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 		websiteResults = append(websiteResults, results...)
 	}
 
+	// Merge results by DomainName
+	mergedResults := make(map[string]webscans.WebsiteDetails)
+	for _, result := range websiteResults {
+		merged, ok := mergedResults[result.DomainName]
+		if !ok {
+			// If this is the first WebsiteDetails for this domain, just use it
+			mergedResults[result.DomainName] = result
+		} else {
+			// Otherwise, merge the details
+			merged.Technologies = append(merged.Technologies, result.Technologies...)
+			merged.Urls = append(merged.Urls, result.Urls...)
+
+			// Add other fields if they are not null
+			if result.StatusCode != "" && merged.StatusCode == "" {
+				merged.StatusCode = result.StatusCode
+			}
+			if result.Source != "" && merged.Source == "" {
+				merged.Source = result.Source
+			}
+			if result.CrawlDirectory != "" && merged.CrawlDirectory == "" {
+				merged.CrawlDirectory = result.CrawlDirectory
+			}
+
+			mergedResults[result.DomainName] = merged
+		}
+	}
+
 	helper.InfoPrintln("========================================================================================>")
 	csvData := [][]string{
-		{"Domain", "Technology", "Status Code", "Source"},
+		{"Domain", "Technology", "Status Code", "Source", "Urls"},
 	}
 
 	// Results
-	for _, result := range websiteResults {
-		helper.ResultPrintf("Domain: %-40s Status Code: %-6s Source: %s\n", result.DomainName, result.StatusCode, result.Source)
+	for domain, result := range mergedResults {
+		helper.ResultPrintf("Domain: %-40s Status Code: %-6s Source: %s\n", domain, result.StatusCode, result.Source)
 
 		for _, technology := range result.Technologies {
 			technologyName := technology.Name
@@ -77,14 +104,16 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 			helper.ResultPrintf("  +- %s\n", technologyName)
 
 			// Add to csvData
-			csvData = append(csvData, []string{result.DomainName, technologyName, result.StatusCode, result.Source})
+			csvData = append(csvData, []string{domain, technologyName, result.StatusCode, result.Source, strings.Join(result.Urls, ",")})
 		}
 
+		helper.ResultPrintf("  +- URLs:\n")
 		for _, urls := range result.Urls {
-			helper.ResultPrintf("    +- URL: %-100s\n", urls)
+			helper.ResultPrintf("    +- %-150s\n", urls)
 		}
 
-		helper.ResultPrintln(">> Total Tech/Urls:", len(result.Technologies), "/", len(result.Urls), ", Files saved on:", result.CrawlDirectory, "\n")
+		helper.ResultPrintln(">> Total Tech / Urls: (", len(result.Technologies), "/", len(result.Urls), "), Files saved in:", result.CrawlDirectory)
+		helper.ResultPrintln("+> Diff files saved in:", result.CrawlDirectory+".diff", "\n")
 	}
 	helper.InfoPrintln("<========================================================================================")
 
