@@ -47,13 +47,14 @@ Note: This application only works on UNIX / LINUX-like operating system
 | Catagories   | Plugines |
 |:-------------|:-------------|
 | Subdomain    | Brute forcing, HackerTarget, LeakIX, AlienVault, Archive.org, RapidDNS, Urlscan.io, MassDNS<sup>*2</sup>, CertSpotter, DuckDuckGo |
-| Web scanning | Web Crawler, Wappalyzer<sup>*3</sup> |
+| Web scanning | Web Crawler<sup>*4</sup>, Wappalyzer<sup>*3</sup> |
 | Secret       | Github<sup>*1</sup> |
 | Email        | Email Format, PGP Scan, DuckDuckGo, Github<sup>*1</sup> |
 
 <sup>*1</sup> An API key is necessary for access.  
 <sup>*2</sup> Software installation is required.  
 <sup>*3</sup> Does not support browser-like functionality.  
+<sup>*4</sup> Features including files difference check.
 
 # TODO
 
