@@ -47,7 +47,7 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 	}
 	helper.InfoPrintln("<========================================================================================")
 	helper.InfoPrintln("If you agree the uses of modules, press Enter to continue...")
-	// fmt.Scanln()
+	fmt.Scanln()
 
 	var websiteResults []webscans.WebsiteDetails
 	for _, sf := range webscanners {
