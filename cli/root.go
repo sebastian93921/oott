@@ -45,6 +45,7 @@ func Start() {
 
 	flag.BoolVar(&lib.Config.WebScan, "web-scan", false, "Perform web scanning.")
 	flag.BoolVar(&lib.Config.WebScan, "w", false, "Perform web scanning. (shorthand)")
+	flag.IntVar(&lib.Config.LevelOfDepth, "crawl-depth", 5, "How deep a crawler bot will access and index on a site during a single crawl (Default: 5)")
 
 	flag.IntVar(&lib.Config.ConcurrentRunningThread, "threads", 500, "Maximum number of Concurrent thread uses.")
 	flag.IntVar(&lib.Config.ConcurrentRunningThread, "t", 500, "Maximum number of Concurrent thread uses (shorthand).")

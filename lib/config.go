@@ -29,7 +29,8 @@ type Configuration struct {
 	LocalScanOnly bool
 	LocalScanPath string
 
-	Crawling bool
+	Crawling     bool
+	LevelOfDepth int
 }
 
 var Config Configuration = Configuration{

@@ -22,11 +22,13 @@ type Crawler struct {
 	// any necessary fields specific
 	outputDir string
 	done      chan bool
+	depth     int
 }
 
 func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 	helper.InfoPrintln("[+] Scanning URLs in domain:", domains)
 	c.outputDir = lib.Config.Tmpfolder + "result/crawler/websites"
+	c.depth = lib.Config.LevelOfDepth
 
 	var websiteDetails []WebsiteDetails
 
@@ -61,7 +63,7 @@ func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 
 		// Try HTTPS first
 		helper.InfoPrintln("[+] Start HTTPS scan..")
-		urls, err := c.fetchAndParseURLs(true, domain, "/", make(map[string]bool))
+		urls, err := c.fetchAndParseURLs(true, domain, "/", make(map[string]bool), 0)
 		if err != nil {
 			return nil, err
 		}
@@ -70,7 +72,7 @@ func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 
 		// Try HTTP
 		helper.InfoPrintln("[+] Start HTTP scan..")
-		urls, err = c.fetchAndParseURLs(false, domain, "/", make(map[string]bool))
+		urls, err = c.fetchAndParseURLs(false, domain, "/", make(map[string]bool), 0)
 		if err != nil {
 			return nil, err
 		}
@@ -124,12 +126,18 @@ func (c *Crawler) startLoadingAnimation() {
 	}()
 }
 
-func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString string, previousUrls map[string]bool) ([]string, error) {
+func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString string, previousUrls map[string]bool, depthLevel int) ([]string, error) {
 	urls := make([]string, 0)
 	urlSet := make(map[string]bool)
 
 	originalURL := urlString
 	outputDir := filepath.Join(c.outputDir, domain+"/")
+
+	// If the depth level reaches the max depth level, stop the crawler
+	if depthLevel > c.depth {
+		helper.VerbosePrintln("[-] Maximum depth exceeded.. increase `-crawl-depth` for deeper scans - URL:", urlString, ", Depth:", depthLevel, ", max depth:", c.depth)
+		return urls, nil
+	}
 
 	// Add http / https on prefix if not exists
 	if !strings.HasPrefix(urlString, "http://") && !strings.HasPrefix(urlString, "https://") {
@@ -241,8 +249,10 @@ func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString strin
 		}
 	})
 
+	// Increase the scanning depth level
+	depthLevel += 1
 	for _, newUrl := range urls {
-		newUrls, err := c.fetchAndParseURLs(isHttps, domain, newUrl, previousUrls)
+		newUrls, err := c.fetchAndParseURLs(isHttps, domain, newUrl, previousUrls, depthLevel)
 		if err == nil {
 			urls = append(urls, newUrls...)
 		} else {
@@ -272,7 +282,7 @@ func (c *Crawler) diffDirectories(domain, dir1, dir2 string) error {
 				if strings.HasSuffix(url, "index") {
 					url = url[:len(url)-6] // Remove "/index"
 				}
-				helper.ResultPrintln("[!] URL %s [%s] does not exist in %s\n", url, relPath, dir2)
+				helper.ResultPrintf("[!] URL %s [%s] does not exist in %s\n", url, relPath, dir2)
 				return nil
 			}
 
