@@ -131,8 +131,6 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 			return nil, err
 		}
 
-		helper.InfoPrintf("[+] JSON file %s loaded successfully.\n", fileName)
-
 		// Add the technology to the map
 		combineMaps(technologies, temptechnologies)
 	}
