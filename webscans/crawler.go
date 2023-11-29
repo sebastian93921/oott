@@ -179,7 +179,7 @@ func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString strin
 		Transport: lib.HttpClientTransportSettings,
 	}
 	urlOnly := parsedURL.Scheme + "://" + parsedURL.Host + parsedURL.Path
-	helper.InfoPrintln("[-] Fetching url: ", urlOnly)
+	helper.VerbosePrintln("[-] Fetching url: ", urlOnly)
 	// Send a GET request to the website
 	req, err := http.NewRequest("GET", urlOnly, nil)
 	if err != nil {
@@ -276,17 +276,7 @@ func (c *Crawler) diffDirectories(domain, dir1, dir2 string) error {
 
 			pathInDir2 := filepath.Join(dir2, relPath)
 
-			// Check if file exists in the second directory
-			if _, err := os.Stat(pathInDir2); os.IsNotExist(err) {
-				url := domain + "/" + relPath
-				if strings.HasSuffix(url, "index") {
-					url = url[:len(url)-6] // Remove "/index"
-				}
-				helper.ResultPrintf("[!] URL %s [%s] does not exist in %s\n", url, relPath, dir2)
-				return nil
-			}
-
-			// Compare file contents
+			// Read and pretty-print the contents
 			content1, err := os.ReadFile(path)
 			if err != nil {
 				return err
@@ -297,6 +287,45 @@ func (c *Crawler) diffDirectories(domain, dir1, dir2 string) error {
 				return err
 			}
 
+			// Check if file exists in the second directory
+			if _, err := os.Stat(pathInDir2); os.IsNotExist(err) {
+				url := domain + "/" + relPath
+				if strings.HasSuffix(url, "index") {
+					url = url[:len(url)-6] // Remove "/index"
+				}
+				helper.ResultPrintf("[!] URL %s [%s] does not exist in %s\n", url, relPath, dir2)
+
+				// Create directories and write the file
+				filePath := filepath.Join(c.outputDir, domain+".diff", relPath)
+				dirPath := filepath.Dir(filePath)
+				if err := os.MkdirAll(dirPath, 0755); err != nil {
+					return err
+				}
+				file, err := os.Create(filePath)
+				if err != nil {
+					return err
+				}
+				defer file.Close()
+
+				// Secret scanning
+				stringContent := make([]string, 0)
+				for _, line := range strings.Split(contentStr1, "\n") {
+					fmt.Fprintf(file, "%s\n", line)
+					stringContent = append(stringContent, line)
+				}
+				matchedFiles, err := localscan.StringArrayScanning(stringContent, path)
+				if err != nil {
+					helper.ErrorPrintln(err)
+				} else {
+					for _, matchedFile := range matchedFiles {
+						helper.CustomizePrintln(matchedFile)
+					}
+				}
+
+				return nil
+			}
+
+			// Read and pretty-print the contents
 			content2, err := os.ReadFile(pathInDir2)
 			if err != nil {
 				return err
@@ -307,6 +336,7 @@ func (c *Crawler) diffDirectories(domain, dir1, dir2 string) error {
 				return err
 			}
 
+			// Compare file contents
 			if contentStr1 != contentStr2 {
 				helper.InfoPrintf("[+] File %s differs between directories\n", relPath)
 
