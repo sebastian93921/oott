@@ -7,7 +7,7 @@ OOTT suits for pentesters and for code reviewing
 ## Local file scanning
 ```
 # Secrets scanning
-./oott -localscan
+./oott -localscan # Current directory
 ./oott -localscan -lp /tmp/
 ```
 
