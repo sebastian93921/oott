@@ -1,5 +1,5 @@
 # OOTT - Offensive Operation and Threat Toolkit
-OOTT suits for pentesters and for security assessment
+OOTT suits for pentesters and for code reviewing
 ![demo](https://github.com/sebastian93921/oott/assets/4918219/a6e23db5-5e8c-4f2d-870a-084434ebbfe1)
 
 
