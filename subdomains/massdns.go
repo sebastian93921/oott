@@ -40,7 +40,7 @@ func (s *Massdns) ScanSubdomains(domain string) ([]SubDomainDetails, error) {
 	if !isMassDNSInstalled() {
 		helper.ErrorPrintln("[!] MassDNS is not installed or not found. Run 'sudo apt install massdns' to install massdns.")
 		helper.ErrorPrintln("Press Enter to continue...")
-		fmt.Scanln()
+		_, _ = fmt.Scanln()
 		return nil, nil
 	}
 

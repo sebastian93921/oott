@@ -59,6 +59,7 @@ func Start() {
 
 	// Util
 	flag.BoolVar(&lib.Config.LocalScanOnly, "localscan", false, "Perform local scanning only.")
+	flag.BoolVar(&lib.Config.LocalScanOnly, "l", false, "Perform local scanning only. (shorthand)")
 	flag.StringVar(&lib.Config.LocalScanPath, "lp", ".", "Local scanning path.")
 
 	flag.Parse()

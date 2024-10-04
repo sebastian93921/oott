@@ -7,10 +7,18 @@ import (
 	"oott/helper"
 	"oott/lib"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
+	"time"
 )
+
+// skipChan Sign handling
+var skipChan = make(chan struct{})
+var skip = false
+var lastInterruptTime time.Time
 
 var ignoredFolders = []string{"node_modules/", ".git/", ".svn/", ".hg/", ".bzr/"}
 var ignoredExtensions = []string{
@@ -59,6 +67,7 @@ func scanDirectory(directoryPath string, patterns map[string]string) []string {
 
 		if !fileInfo.IsDir() && !shouldIgnoreFile(filePath) {
 			fmt.Println(filePath)
+			skip = false
 
 			fileContent, err := os.ReadFile(filePath)
 			if err != nil {
@@ -72,9 +81,14 @@ func scanDirectory(directoryPath string, patterns map[string]string) []string {
 			lines := strings.Split(content, "\n")
 
 			for lineNum, line := range lines {
-				lineNumber := lineNum + 1
-				// Check if the file matches any pattern
-				matchedFiles = append(matchedFiles, checkByPattern(line, lineNumber, filePath, compiledPatterns)...)
+				if !skip {
+					lineNumber := lineNum + 1
+					// Check if the file matches any pattern
+					matchedFiles = append(matchedFiles, checkByPattern(line, lineNumber, filePath, compiledPatterns)...)
+				} else {
+					helper.InfoPrintln("File skipped:", filePath)
+					break
+				}
 			}
 		}
 
@@ -148,6 +162,8 @@ func StartLocalSecretsScanOnly() {
 	directoryPath := lib.Config.LocalScanPath
 
 	helper.InfoPrintln("[+] Start local secrets scanning..")
+	createSkipHandler()
+	defer closeSkipHandler()
 
 	// Perform directory scan
 	matchedFiles := scanDirectory(directoryPath, patterns)
@@ -159,5 +175,44 @@ func StartLocalSecretsScanOnly() {
 	}
 	if len(matchedFiles) <= 0 {
 		helper.InfoPrintln("No any matches found.")
+	}
+}
+
+func createSkipHandler() {
+	// Create a channel to receive the interrupt signal
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+
+	// Create a channel to signal cancellation
+	skipChan = make(chan struct{})
+
+	// Start a goroutine to listen for the interrupt signal
+	go func() {
+		// Wait for the interrupt signal
+		sig := <-interrupt
+		switch sig {
+		case os.Interrupt:
+			if time.Since(lastInterruptTime) <= time.Second/2 {
+				helper.ErrorPrintln("\n[!] Receive interrupt signal")
+				os.Exit(0)
+			} else {
+				lastInterruptTime = time.Now()
+				helper.ErrorPrintln("\n[!] Receive interrupt signal, file skipped, press again to exit")
+				skip = true
+				createSkipHandler()
+			}
+		}
+	}()
+
+}
+
+func closeSkipHandler() {
+	select {
+	case _, ok := <-skipChan:
+		if !ok {
+			return
+		}
+	default:
+		close(skipChan)
 	}
 }

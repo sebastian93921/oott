@@ -31,7 +31,7 @@ func SearchGithubRepoByKeyword(keywords string) []GithubRepo {
 		helper.ErrorPrintln("[!] No personal access token provided. Process can not be proceed...")
 		helper.ErrorPrintln("[!] Please go to https://github.com/settings/tokens to create one, no any permission needed.")
 		helper.ErrorPrintln("Press Enter to continue...")
-		fmt.Scanln()
+		_, _ = fmt.Scanln()
 		return nil
 	}
 

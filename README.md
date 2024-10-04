@@ -10,6 +10,7 @@ OOTT suits for pentesters and for code reviewing
 ./oott -localscan # Current directory
 ./oott -localscan -lp /tmp/
 ```
+Feel free to contribute the `secretpatterns.json` file to enrich the secret scanning capability
 
 ## Sub-domain scanning
 ```

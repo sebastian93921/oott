@@ -42,7 +42,7 @@ func StartSubDomainScan(domain string) []subdomains.SubDomainDetails {
 	}
 	helper.InfoPrintln("<========================================================================================")
 	helper.InfoPrintln("If you agree the uses of modules, press Enter to continue...")
-	fmt.Scanln()
+	_, _ = fmt.Scanln()
 
 	var subdomainLists []subdomains.SubDomainDetails
 	for _, sf := range subdomainScanResults {

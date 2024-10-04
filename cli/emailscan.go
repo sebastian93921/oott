@@ -30,7 +30,7 @@ func StartEmailScan(domain string) []emails.EmailDetails {
 	}
 	helper.InfoPrintln("<========================================================================================")
 	helper.InfoPrintln("If you agree the uses of modules, press Enter to continue...")
-	fmt.Scanln()
+	_, _ = fmt.Scanln()
 
 	var emailLists []emails.EmailDetails
 	emailMap := make(map[string]string)

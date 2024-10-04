@@ -28,7 +28,7 @@ func StartSecretScan(domain string) []secrets.SecretDetails {
 	}
 	helper.InfoPrintln("<========================================================================================")
 	helper.InfoPrintln("If you agree the uses of modules, press Enter to continue...")
-	fmt.Scanln()
+	_, _ = fmt.Scanln()
 
 	var secretsLists []secrets.SecretDetails
 	for _, ss := range secretsScanner {
