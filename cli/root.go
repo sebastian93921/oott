@@ -20,7 +20,7 @@ var (
 
 func printBanner() {
 	helper.CustomizePrintln("========================================================================================>")
-	helper.CustomizePrintln("OOTT - OSINT Offensive Toolkit")
+	helper.CustomizePrintln("OOTT - Offensive Operation and Threat Toolkit")
 	helper.CustomizePrintln("<========================================================================================")
 }
 
