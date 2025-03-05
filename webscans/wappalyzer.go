@@ -86,8 +86,9 @@ func (wp *Wappalyzer) downloadJSON(url, filePath string) ([]byte, error) {
 }
 
 func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
-	baseURL := "https://raw.githubusercontent.com/wappalyzer/wappalyzer/master/src/technologies/"
-	skipDownload := true // Wappalyzer doesn't open their github projects now
+	// baseURL := "https://raw.githubusercontent.com/wappalyzer/wappalyzer/master/src/technologies/" # wappalyzer went private in August 2023
+	baseURL := "https://raw.githubusercontent.com/enthec/webappanalyzer/main/src/technologies/"
+	skipDownload := false
 
 	// Map to store the technologies
 	technologies := make(map[string]Technology)
@@ -115,6 +116,7 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 					helper.ErrorPrintf("[!] Error reading embedded file:", err)
 					return nil, err
 				}
+				skipDownload = true
 			}
 		} else {
 			data, err = defaults.EmbeddedWappalyzerFiles.ReadFile("wappalyzer/" + fileName)
