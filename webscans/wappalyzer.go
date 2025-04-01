@@ -7,7 +7,9 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -85,138 +87,23 @@ func (wp *Wappalyzer) downloadJSON(url, filePath string) ([]byte, error) {
 	return fileBytes, nil
 }
 
-func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
-	// baseURL := "https://raw.githubusercontent.com/wappalyzer/wappalyzer/master/src/technologies/" # wappalyzer went private in August 2023
-	baseURL := "https://raw.githubusercontent.com/enthec/webappanalyzer/main/src/technologies/"
-	skipDownload := false
-
-	// Map to store the technologies
-	technologies := make(map[string]Technology)
-
-	// Loop through the range of file names (_.json, a.json to z.json)
-	for c := '_'; c <= 'z'; c++ {
-		// Skip filenames before a.json
-		if c < 'a' && c != '_' {
-			continue
-		}
-
-		fileName := string(c) + ".json"
-		url := baseURL + fileName
-
-		var data []byte
-		var err error
-		if !skipDownload {
-			data, err = wp.downloadJSON(url, lib.Config.Tmpfolder+fileName)
-			if err != nil {
-				helper.ErrorPrintf("[!] Error downloading JSON file %s. Read the default files... Error: %v\n", fileName, err)
-
-				// Incase network issue, read local one
-				data, err = defaults.EmbeddedWappalyzerFiles.ReadFile("wappalyzer/" + fileName)
-				if err != nil {
-					helper.ErrorPrintf("[!] Error reading embedded file:", err)
-					return nil, err
-				}
-				skipDownload = true
-			}
-		} else {
-			data, err = defaults.EmbeddedWappalyzerFiles.ReadFile("wappalyzer/" + fileName)
-			if err != nil {
-				helper.ErrorPrintf("[!] Error reading embedded file:", err)
-				return nil, err
-			}
-		}
-
-		var temptechnologies map[string]Technology
-		err = json.Unmarshal(data, &temptechnologies)
-		if err != nil {
-			helper.ErrorPrintf("[!] Error parsing JSON file %s: %v\n", fileName, err)
-			return nil, err
-		}
-
-		// Add the technology to the map
-		combineMaps(technologies, temptechnologies)
-	}
-
-	var websiteDetails []WebsiteDetails
-	for _, domain := range domains {
-		// HTTPS Scan
-		url := "https://" + domain
-		resultHttps, err := wp.scanWappalyzerScanByUrl(domain, url, technologies)
-		if err != nil {
-			helper.ErrorPrintln("[!] Error Scanning url: ", err)
-		}
-
-		// HTTP Scan
-		url = "http://" + domain
-		resultHttp, err := wp.scanWappalyzerScanByUrl(domain, url, technologies)
-		if err != nil {
-			helper.ErrorPrintln("[!] Error Scanning url: ", err)
-		}
-
-		if resultHttps.DomainName != "" {
-			resultHttps.Technologies = wp.appendDistinct(resultHttps.Technologies, resultHttp.Technologies)
-		} else if resultHttp.DomainName != "" {
-			// No result on https, just use it to append the result
-			resultHttps = resultHttp
-		} else {
-			// No result
-			continue
-		}
-
-		resultHttps.Source = "Wappalyzer"
-		websiteDetails = append(websiteDetails, resultHttps)
-	}
-
-	return websiteDetails, nil
-}
-
-func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technologies map[string]Technology) (WebsiteDetails, error) {
-	helper.InfoPrintln("[Wappalyzer] Start scanning URL:", url)
-
-	client := http.Client{
-		Timeout:   time.Second * 10, // 10 seconds
-		Transport: lib.HttpClientTransportSettings,
-	}
+func (wp *Wappalyzer) scanContent(domain string, content []byte, technologies map[string]Technology, headers http.Header) (WebsiteDetails, error) {
+	helper.InfoPrintln("[Wappalyzer] Start scanning content for domain:", domain)
 
 	result := WebsiteDetails{}
-	// Send a GET request to the website
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return result, err
-	}
-	headers := http.Header{}
-	headers.Set("User-Agent", lib.Config.Useragent)
-	req.Header = headers
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return result, err
-	}
-
-	defer resp.Body.Close()
-
-	// Read the response content
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		helper.ErrorPrintln("[!] Failed to read response body:", err)
-		return result, err
-	}
-	content := string(body)
+	contentStr := string(content)
 
 	// Suffle technologies
 	technologies = wp.suffleTechnologiesMap(technologies)
-
-	// Assign status code to result
-	result.StatusCode = strconv.Itoa(resp.StatusCode)
 
 	// Search for technologies based on HTML regex or script source
 	for name, tech := range technologies {
 		searched := false
 
 		// Check if the headers regex matches the content
-		if tech.Headers != nil {
+		if tech.Headers != nil && headers != nil {
 			for header, expectedValue := range tech.Headers {
-				actualValue := resp.Header.Get(header)
+				actualValue := headers.Get(header)
 				if expectedValue == "" && actualValue != "" {
 					helper.InfoPrintf("[Wappalyzer] Domain [%s] header static matched for technology: %s\n", domain, name)
 					helper.VerbosePrintln(header, "->", actualValue)
@@ -245,7 +132,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 		// Check if the Meta regex matches the content
 		if tech.Meta != nil {
 			// Create a reader from the byte array
-			reader := bytes.NewReader(body)
+			reader := bytes.NewReader(content)
 
 			// Parse the HTML document
 			doc, err := goquery.NewDocumentFromReader(reader)
@@ -302,7 +189,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 
 		// Check if the HTML regex matches the content
 		if tech.HTML != nil {
-			result := wp.processSearchByInterface("HTML regex", name, domain, content, &result, tech.HTML)
+			result := wp.processSearchByInterface("HTML regex", name, domain, contentStr, &result, tech.HTML)
 			if result {
 				searched = true
 			}
@@ -310,15 +197,15 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 
 		// Check if the script source matches the content
 		if tech.ScriptSrc != nil {
-			result := wp.processSearchByInterface("Script source regex", name, domain, content, &result, tech.ScriptSrc)
+			result := wp.processSearchByInterface("Script source regex", name, domain, contentStr, &result, tech.ScriptSrc)
 			if result {
 				searched = true
 			}
 		}
 
-		// Check if the script source matches the content
+		// Check if the text matches the content
 		if tech.Text != nil {
-			result := wp.processSearchByInterface("Text regex", name, domain, content, &result, tech.Text)
+			result := wp.processSearchByInterface("Text regex", name, domain, contentStr, &result, tech.Text)
 			if result {
 				searched = true
 			}
@@ -327,7 +214,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 		// Dom search
 		if tech.Dom != nil {
 			// Create a reader from the byte array
-			reader := bytes.NewReader(body)
+			reader := bytes.NewReader(content)
 
 			// Parse the HTML document
 			doc, err := goquery.NewDocumentFromReader(reader)
@@ -412,6 +299,68 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, url string, technol
 		}
 	}
 
+	return result, nil
+}
+
+func (wp *Wappalyzer) scanWappalyzerScanByLocalFile(domain string, filePath string, technologies map[string]Technology) (WebsiteDetails, error) {
+	helper.InfoPrintln("[Wappalyzer] Start scanning local file:", filePath)
+
+	// Read the file content
+	body, err := os.ReadFile(filePath)
+	if err != nil {
+		helper.ErrorPrintln("[!] Failed to read file:", err)
+		return WebsiteDetails{}, err
+	}
+
+	return wp.scanContent(domain, body, technologies, nil)
+}
+
+func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, urlStr string, technologies map[string]Technology) (WebsiteDetails, error) {
+	helper.InfoPrintln("[Wappalyzer] Start scanning URL:", urlStr)
+
+	// Extract domain name from URL if not already provided
+	if domain == "" {
+		parsedURL, err := url.Parse(urlStr)
+		if err == nil {
+			domain = parsedURL.Host
+		}
+	}
+
+	client := http.Client{
+		Timeout:   time.Second * 10, // 10 seconds
+		Transport: lib.HttpClientTransportSettings,
+	}
+
+	// Send a GET request to the website
+	req, err := http.NewRequest("GET", urlStr, nil)
+	if err != nil {
+		return WebsiteDetails{}, err
+	}
+	headers := http.Header{}
+	headers.Set("User-Agent", lib.Config.Useragent)
+	req.Header = headers
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return WebsiteDetails{}, err
+	}
+
+	defer resp.Body.Close()
+
+	// Read the response content
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		helper.ErrorPrintln("[!] Failed to read response body:", err)
+		return WebsiteDetails{}, err
+	}
+
+	result, err := wp.scanContent(domain, body, technologies, resp.Header)
+	if err != nil {
+		return result, err
+	}
+
+	// Assign status code to result
+	result.StatusCode = strconv.Itoa(resp.StatusCode)
 	return result, nil
 }
 
@@ -706,4 +655,131 @@ func combineMaps(map1, map2 map[string]Technology) {
 	for key, value := range map2 {
 		map1[key] = value
 	}
+}
+
+func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
+	// baseURL := "https://raw.githubusercontent.com/wappalyzer/wappalyzer/master/src/technologies/" # wappalyzer went private in August 2023
+	baseURL := "https://raw.githubusercontent.com/enthec/webappanalyzer/main/src/technologies/"
+	skipDownload := false
+
+	// Map to store the technologies
+	technologies := make(map[string]Technology)
+
+	// Loop through the range of file names (_.json, a.json to z.json)
+	for c := '_'; c <= 'z'; c++ {
+		// Skip filenames before a.json
+		if c < 'a' && c != '_' {
+			continue
+		}
+
+		fileName := string(c) + ".json"
+		url := baseURL + fileName
+
+		var data []byte
+		var err error
+		if !skipDownload {
+			data, err = wp.downloadJSON(url, lib.Config.Tmpfolder+fileName)
+			if err != nil {
+				helper.ErrorPrintf("[!] Error downloading JSON file %s. Read the default files... Error: %v\n", fileName, err)
+
+				// Incase network issue, read local one
+				data, err = defaults.EmbeddedWappalyzerFiles.ReadFile("wappalyzer/" + fileName)
+				if err != nil {
+					helper.ErrorPrintf("[!] Error reading embedded file:", err)
+					return nil, err
+				}
+				skipDownload = true
+			}
+		} else {
+			data, err = defaults.EmbeddedWappalyzerFiles.ReadFile("wappalyzer/" + fileName)
+			if err != nil {
+				helper.ErrorPrintf("[!] Error reading embedded file:", err)
+				return nil, err
+			}
+		}
+
+		var temptechnologies map[string]Technology
+		err = json.Unmarshal(data, &temptechnologies)
+		if err != nil {
+			helper.ErrorPrintf("[!] Error parsing JSON file %s: %v\n", fileName, err)
+			return nil, err
+		}
+
+		// Add the technology to the map
+		combineMaps(technologies, temptechnologies)
+	}
+
+	var websiteDetails []WebsiteDetails
+
+	// Read domains from last-fetched-domains.txt if it exists
+	domainsPath := filepath.Join(lib.Config.Tmpfolder, "result/crawler/websites/last-fetched-domains.txt")
+	if _, err := os.Stat(domainsPath); err == nil {
+		// Read domains from file
+		domainsData, err := os.ReadFile(domainsPath)
+		if err == nil {
+			// Split into lines and add to domains list
+			discoveredDomains := strings.Split(string(domainsData), "\n")
+			for _, domain := range discoveredDomains {
+				domain = strings.TrimSpace(domain)
+				if domain != "" {
+					domains = append(domains, domain)
+				}
+			}
+		}
+	}
+
+	// Remove duplicates from domains
+	uniqueDomains := make(map[string]bool)
+	var cleanDomains []string
+	for _, domain := range domains {
+		if !uniqueDomains[domain] {
+			uniqueDomains[domain] = true
+			cleanDomains = append(cleanDomains, domain)
+		}
+	}
+
+	for _, domain := range cleanDomains {
+		// Try to scan local file first
+		localFilePath := filepath.Join(lib.Config.Tmpfolder, "result/crawler/websites", domain, "index")
+		if _, err := os.Stat(localFilePath); err == nil {
+			result, err := wp.scanWappalyzerScanByLocalFile(domain, localFilePath, technologies)
+			if err != nil {
+				helper.ErrorPrintln("[!] Error scanning local file:", err)
+			} else if result.DomainName != "" {
+				result.Source = "Wappalyzer (Local)"
+				websiteDetails = append(websiteDetails, result)
+				continue
+			}
+		}
+
+		// If local file scan fails or file doesn't exist, fall back to HTTP requests
+		// HTTPS Scan
+		url := "https://" + domain
+		resultHttps, err := wp.scanWappalyzerScanByUrl(domain, url, technologies)
+		if err != nil {
+			helper.ErrorPrintln("[!] Error Scanning url: ", err)
+		}
+
+		// HTTP Scan
+		url = "http://" + domain
+		resultHttp, err := wp.scanWappalyzerScanByUrl(domain, url, technologies)
+		if err != nil {
+			helper.ErrorPrintln("[!] Error Scanning url: ", err)
+		}
+
+		if resultHttps.DomainName != "" {
+			resultHttps.Technologies = wp.appendDistinct(resultHttps.Technologies, resultHttp.Technologies)
+		} else if resultHttp.DomainName != "" {
+			// No result on https, just use it to append the result
+			resultHttps = resultHttp
+		} else {
+			// No result
+			continue
+		}
+
+		resultHttps.Source = "Wappalyzer"
+		websiteDetails = append(websiteDetails, resultHttps)
+	}
+
+	return websiteDetails, nil
 }

@@ -61,6 +61,8 @@ func Start() {
 	flag.BoolVar(&lib.Config.LocalScanOnly, "localscan", false, "Perform local scanning only.")
 	flag.BoolVar(&lib.Config.LocalScanOnly, "l", false, "Perform local scanning only. (shorthand)")
 	flag.StringVar(&lib.Config.LocalScanPath, "lp", ".", "Local scanning path.")
+	flag.BoolVar(&lib.Config.SkipPrompt, "skip-prompt", false, "Skip the 'press Enter to continue' prompt.")
+	flag.BoolVar(&lib.Config.SkipPrompt, "y", false, "Skip the 'press Enter to continue' prompt. (shorthand)")
 
 	flag.Parse()
 
@@ -96,7 +98,7 @@ func Start() {
 	helper.VerbosePrintln("[-] Verbose mode is enabled, resulting in more detailed console output.")
 
 	// Create folder if not exists
-	if _, err := os.Stat(*outputDir); !os.IsNotExist(err) && *outputDir != "" {
+	if *outputDir != "" {
 		lib.Config.Tmpfolder = *outputDir + "/oott-output/" // Make sure to create files inside the directory
 	}
 	err := os.MkdirAll(lib.Config.Tmpfolder, os.ModePerm)

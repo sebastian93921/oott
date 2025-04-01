@@ -23,26 +23,60 @@ type Crawler struct {
 	outputDir string
 	done      chan bool
 	depth     int
+	domains   map[string]bool // Store unique domains
 }
 
 func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 	helper.InfoPrintln("[+] Scanning URLs in domain:", domains)
 	c.outputDir = lib.Config.Tmpfolder + "result/crawler/websites"
 	c.depth = lib.Config.LevelOfDepth
+	c.domains = make(map[string]bool) // Initialize domains map
 
 	var websiteDetails []WebsiteDetails
 
-	// If the folder not exists, create it
-	dirPath := filepath.Dir(c.outputDir)
-	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		return nil, err
+	// Create the output directory and its parent directories
+	if err := os.MkdirAll(c.outputDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create output directory: %v", err)
 	}
 
+	// Remove existing last-fetched-domains.txt if it exists
+	domainsFilePath := filepath.Join(c.outputDir, "last-fetched-domains.txt")
+	if _, err := os.Stat(domainsFilePath); err == nil {
+		if err := os.Remove(domainsFilePath); err != nil {
+			helper.ErrorPrintln("[!] Error removing existing last-fetched-domains.txt:", err)
+		}
+	}
+
+	// Create new last-fetched-domains.txt file to store discovered domains
+	domainsFile, err := os.Create(domainsFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create domains file: %v", err)
+	}
+	defer domainsFile.Close()
+
 	for _, domain := range domains {
+		// Extract just the domain name from the URL if it contains a path
+		domainName := domain
+		urlPath := "/"
+		if strings.Contains(domain, "/") {
+			// If it's a URL with path, extract just the host part and the path
+			parsedURL, err := url.Parse("https://" + domain)
+			if err == nil {
+				domainName = parsedURL.Host
+				if parsedURL.Path != "" {
+					urlPath = parsedURL.Path
+				}
+				helper.VerbosePrintln("[+] Extracted domain:", domainName, "path:", urlPath)
+			} else {
+				helper.ErrorPrintln("[!] Error parsing URL:", err)
+				continue
+			}
+		}
+
 		c.startLoadingAnimation()
 		websiteDetail := &WebsiteDetails{
-			DomainName:     domain,
-			CrawlDirectory: filepath.Join(c.outputDir, domain),
+			DomainName:     domainName,
+			CrawlDirectory: filepath.Join(c.outputDir, domainName),
 		}
 
 		if _, err := os.Stat(websiteDetail.CrawlDirectory); err == nil {
@@ -63,7 +97,7 @@ func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 
 		// Try HTTPS first
 		helper.InfoPrintln("[+] Start HTTPS scan..")
-		urls, err := c.fetchAndParseURLs(true, domain, "/", make(map[string]bool), 0)
+		urls, err := c.fetchAndParseURLs(true, domainName, urlPath, make(map[string]bool), 0)
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +106,7 @@ func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 
 		// Try HTTP
 		helper.InfoPrintln("[+] Start HTTP scan..")
-		urls, err = c.fetchAndParseURLs(false, domain, "/", make(map[string]bool), 0)
+		urls, err = c.fetchAndParseURLs(false, domainName, urlPath, make(map[string]bool), 0)
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +126,7 @@ func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 		if err := os.MkdirAll(websiteDetail.CrawlDirectory+".diff", 0755); err != nil {
 			return nil, err
 		}
-		err = c.diffDirectories(domain, websiteDetail.CrawlDirectory, websiteDetail.CrawlDirectory+".old")
+		err = c.diffDirectories(domainName, websiteDetail.CrawlDirectory, websiteDetail.CrawlDirectory+".old")
 		if err != nil {
 			helper.ErrorPrintln("[!] Error on diff directory", err)
 		}
@@ -126,16 +160,28 @@ func (c *Crawler) startLoadingAnimation() {
 	}()
 }
 
+// isSameDomainOrSubdomain checks if the given host belongs to the root domain or its subdomains
+func (c *Crawler) isSameDomainOrSubdomain(host, rootDomain string) bool {
+	// Remove any port numbers if present
+	host = strings.Split(host, ":")[0]
+
+	// Check if it's the exact domain
+	if host == rootDomain {
+		return true
+	}
+
+	// Check if it's a subdomain
+	return strings.HasSuffix(host, "."+rootDomain)
+}
+
 func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString string, previousUrls map[string]bool, depthLevel int) ([]string, error) {
 	urls := make([]string, 0)
 	urlSet := make(map[string]bool)
 
 	originalURL := urlString
-	outputDir := filepath.Join(c.outputDir, domain+"/")
 
-	// If the depth level reaches the max depth level, stop the crawler
-	if depthLevel > c.depth {
-		helper.VerbosePrintln("[-] Maximum depth exceeded.. increase `-crawl-depth` for deeper scans - URL:", urlString, ", Depth:", depthLevel, ", max depth:", c.depth)
+	// Skip URLs that contain JavaScript template literals or other invalid characters
+	if strings.Contains(urlString, "${") || strings.Contains(urlString, "}") {
 		return urls, nil
 	}
 
@@ -151,9 +197,34 @@ func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString strin
 	// Parse the URL and check its domain
 	parsedURL, err := url.Parse(urlString)
 	if err != nil {
-		return urls, err
+		helper.VerbosePrintln("[-] Invalid URL skipped:", urlString, "Error:", err)
+		return urls, nil
 	}
-	if parsedURL.Host != domain {
+
+	// Check if the URL belongs to the root domain or its subdomains
+	if !c.isSameDomainOrSubdomain(parsedURL.Host, domain) {
+		helper.VerbosePrintln("[-] URL not in same domain or subdomain:", urlString)
+		return urls, nil
+	}
+
+	// Store the discovered domain if it's new
+	if parsedURL.Host != "" && !c.domains[parsedURL.Host] {
+		c.domains[parsedURL.Host] = true
+		// Append to last-fetched-domains.txt file
+		if domainsFile, err := os.OpenFile(filepath.Join(c.outputDir, "last-fetched-domains.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+			fmt.Fprintln(domainsFile, parsedURL.Host)
+			domainsFile.Close()
+		}
+		helper.InfoPrintln("[+] Discovered new domain:", parsedURL.Host)
+	}
+
+	// Use the actual host for storage directory
+	storageHost := strings.Split(parsedURL.Host, ":")[0]
+	outputDir := filepath.Join(c.outputDir, storageHost+"/")
+
+	// If the depth level reaches the max depth level, stop the crawler
+	if depthLevel > c.depth {
+		helper.VerbosePrintln("[-] Maximum depth exceeded.. increase `-crawl-depth` for deeper scans - URL:", urlString, ", Depth:", depthLevel, ", max depth:", c.depth)
 		return urls, nil
 	}
 
@@ -225,7 +296,7 @@ func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString strin
 	defer file.Close()
 	// Create a new reader with the body bytes again
 	bodyReader = bytes.NewReader(bodyBytes)
-	if _, err := io.Copy(file, bodyReader); err != nil { //TODO: no bytes
+	if _, err := io.Copy(file, bodyReader); err != nil {
 		return nil, err
 	}
 
@@ -235,15 +306,16 @@ func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString strin
 		src, _ := s.Attr("src")
 		action, _ := s.Attr("action")
 
-		if href != "" && href != originalURL && href != urlString && !urlSet[href] {
+		// Skip URLs with JavaScript template literals or other invalid characters
+		if href != "" && !strings.Contains(href, "${") && href != originalURL && href != urlString && !urlSet[href] {
 			urls = append(urls, href)
 			urlSet[href] = true
 		}
-		if src != "" && !urlSet[src] {
+		if src != "" && !strings.Contains(src, "${") && !urlSet[src] {
 			urls = append(urls, src)
 			urlSet[src] = true
 		}
-		if action != "" && !urlSet[action] {
+		if action != "" && !strings.Contains(action, "${") && !urlSet[action] {
 			urls = append(urls, action)
 			urlSet[action] = true
 		}
@@ -296,7 +368,7 @@ func (c *Crawler) diffDirectories(domain, dir1, dir2 string) error {
 				helper.ResultPrintf("[!] URL %s [%s] does not exist in %s\n", url, relPath, dir2)
 
 				// Create directories and write the file
-				filePath := filepath.Join(c.outputDir, domain+".diff", relPath)
+				filePath := filepath.Join(dir1+".diff", relPath)
 				dirPath := filepath.Dir(filePath)
 				if err := os.MkdirAll(dirPath, 0755); err != nil {
 					return err
@@ -341,7 +413,7 @@ func (c *Crawler) diffDirectories(domain, dir1, dir2 string) error {
 				helper.InfoPrintf("[+] File %s differs between directories\n", relPath)
 
 				// Create directories and write the file
-				filePath := filepath.Join(c.outputDir, domain+".diff", relPath)
+				filePath := filepath.Join(dir1+".diff", relPath)
 				dirPath := filepath.Dir(filePath)
 				if err := os.MkdirAll(dirPath, 0755); err != nil {
 					return err
@@ -366,18 +438,13 @@ func (c *Crawler) diffDirectories(domain, dir1, dir2 string) error {
 						}
 						switch diff.Type {
 						case diffmatchpatch.DiffInsert:
-							// log.Println("+", line)
 							diffString := "+" + line
 							fmt.Fprintf(file, "%s\n", diffString)
 							stringContent = append(stringContent, diffString)
 						case diffmatchpatch.DiffDelete:
-							// log.Println("-", line)
 							diffString := "-" + line
 							fmt.Fprintf(file, "%s\n", diffString)
 							stringContent = append(stringContent, diffString)
-							// case diffmatchpatch.DiffEqual:
-							// 	fmt.Println(" ", line)
-							//  fmt.Fprintf(file, " %s\n", line)
 						}
 					}
 				}

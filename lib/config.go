@@ -31,6 +31,8 @@ type Configuration struct {
 
 	Crawling     bool
 	LevelOfDepth int
+
+	SkipPrompt bool
 }
 
 var Config Configuration = Configuration{

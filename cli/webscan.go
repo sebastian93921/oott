@@ -46,8 +46,10 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 		helper.ResultPrintln(parts[len(parts)-1])
 	}
 	helper.InfoPrintln("<========================================================================================")
-	helper.InfoPrintln("If you agree the uses of modules, press Enter to continue...")
-	_, _ = fmt.Scanln()
+	if !lib.Config.SkipPrompt {
+		helper.InfoPrintln("If you agree the uses of modules, press Enter to continue...")
+		_, _ = fmt.Scanln()
+	}
 
 	var websiteResults []webscans.WebsiteDetails
 	for _, sf := range webscanners {
