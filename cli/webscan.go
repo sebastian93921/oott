@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"oott/helper"
@@ -109,10 +110,19 @@ func StartWebScan(domains []string) []webscans.WebsiteDetails {
 			csvData = append(csvData, []string{domain, technologyName, result.StatusCode, result.Source, strings.Join(result.Urls, ",")})
 		}
 
-		helper.ResultPrintf("  +- Extracted URLs: %d\n", len(result.Urls))
+		if len(result.Urls) > 0 {
+			helper.ResultPrintf("  +- Extracted URLs: %d\n", len(result.Urls))
+		}
 
-		helper.ResultPrintln(">> Total Tech: ", len(result.Technologies), ", Files saved in:", result.CrawlDirectory)
-		helper.ResultPrintln("+> Diff files saved in:", result.CrawlDirectory+".diff", "\n")
+		if result.CrawlDirectory != "" {
+			helper.ResultPrintln(">> Total Tech: ", len(result.Technologies), ", Files saved in:", result.CrawlDirectory)
+			// Check if the diff file exists
+			if _, err := os.Stat(result.CrawlDirectory + ".diff"); err == nil {
+				helper.ResultPrintln("+> Diff files saved in:", result.CrawlDirectory+".diff", "\n")
+			}
+		} else {
+			helper.ResultPrintln(">> Total Tech: ", len(result.Technologies))
+		}
 	}
 	helper.InfoPrintln("<========================================================================================")
 

@@ -20,19 +20,16 @@ import (
 
 type Crawler struct {
 	// any necessary fields specific
-	outputDir string
-	done      chan bool
-	depth     int
-	domains   map[string]bool // Store unique domains
+	outputDir      string
+	done           chan bool
+	depth          int
+	websiteDetails []WebsiteDetails
 }
 
 func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 	helper.InfoPrintln("[+] Scanning URLs in domain:", domains)
 	c.outputDir = lib.Config.Tmpfolder + "result/crawler/websites"
 	c.depth = lib.Config.LevelOfDepth
-	c.domains = make(map[string]bool) // Initialize domains map
-
-	var websiteDetails []WebsiteDetails
 
 	// Create the output directory and its parent directories
 	if err := os.MkdirAll(c.outputDir, 0755); err != nil {
@@ -131,13 +128,13 @@ func (c *Crawler) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 			helper.ErrorPrintln("[!] Error on diff directory", err)
 		}
 
-		websiteDetails = append(websiteDetails, *websiteDetail)
+		c.websiteDetails = append(c.websiteDetails, *websiteDetail)
 
 		// Stop loading animation
 		c.done <- true
 	}
 
-	return websiteDetails, nil
+	return c.websiteDetails, nil
 }
 
 func (c *Crawler) startLoadingAnimation() {
@@ -208,14 +205,36 @@ func (c *Crawler) fetchAndParseURLs(isHttps bool, domain string, urlString strin
 	}
 
 	// Store the discovered domain if it's new
-	if parsedURL.Host != "" && !c.domains[parsedURL.Host] {
-		c.domains[parsedURL.Host] = true
-		// Append to last-fetched-domains.txt file
-		if domainsFile, err := os.OpenFile(filepath.Join(c.outputDir, "last-fetched-domains.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
-			fmt.Fprintln(domainsFile, parsedURL.Host)
-			domainsFile.Close()
+	if parsedURL.Host != "" {
+		// Check if we've already seen this domain
+		domainExists := false
+		for _, detail := range c.websiteDetails {
+			if detail.DomainName == parsedURL.Host {
+				domainExists = true
+				break
+			}
 		}
-		helper.InfoPrintln("[+] Discovered new domain:", parsedURL.Host)
+
+		if !domainExists {
+			// Append to last-fetched-domains.txt file
+			if domainsFile, err := os.OpenFile(filepath.Join(c.outputDir, "last-fetched-domains.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+				fmt.Fprintln(domainsFile, parsedURL.Host)
+				domainsFile.Close()
+			}
+			helper.InfoPrintln("[+] Discovered new domain:", parsedURL.Host)
+
+			// Create new WebsiteDetails for the discovered domain
+			newDetail := WebsiteDetails{
+				DomainName:     parsedURL.Host,
+				CrawlDirectory: filepath.Join(c.outputDir, parsedURL.Host),
+			}
+			c.websiteDetails = append(c.websiteDetails, newDetail)
+
+			// Create directory for the new domain
+			if err := os.MkdirAll(newDetail.CrawlDirectory, 0755); err != nil {
+				helper.ErrorPrintln("[!] Error creating directory for new domain:", err)
+			}
+		}
 	}
 
 	// Use the actual host for storage directory
