@@ -746,9 +746,8 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 			if err != nil {
 				helper.ErrorPrintln("[!] Error scanning local file:", err)
 			} else if result.DomainName != "" {
-				result.Source = "Wappalyzer (Local)"
+				result.Source = "Wappalyzer"
 				websiteDetails = append(websiteDetails, result)
-				continue
 			}
 		}
 
