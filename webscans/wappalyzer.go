@@ -364,7 +364,7 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, urlStr string, tech
 	// Check if any technologies have JavaScript patterns to evaluate
 	jsNeeded := false
 	for _, tech := range technologies {
-		if tech.Js != nil && len(tech.Js) > 0 {
+		if len(tech.Js) > 0 {
 			jsNeeded = true
 			break
 		}
