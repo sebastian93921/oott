@@ -2,6 +2,7 @@ package webscans
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,6 +21,7 @@ import (
 	"oott/lib"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/chromedp/chromedp"
 )
 
 type Technology struct {
@@ -358,6 +360,26 @@ func (wp *Wappalyzer) scanWappalyzerScanByUrl(domain string, urlStr string, tech
 	if err != nil {
 		return result, err
 	}
+	
+	// Check if any technologies have JavaScript patterns to evaluate
+	jsNeeded := false
+	for _, tech := range technologies {
+		if tech.Js != nil && len(tech.Js) > 0 {
+			jsNeeded = true
+			break
+		}
+	}
+	
+	// Run JavaScript scanning if any technology has Js patterns
+	if jsNeeded {
+		helper.InfoPrintf("[Wappalyzer] JavaScript scanning needed for %s\n", domain)
+		jsTechs, jsErr := wp.scanJsExpressions(domain, urlStr, technologies)
+		if jsErr == nil && len(jsTechs) > 0 {
+			result.Technologies = wp.appendDistinct(result.Technologies, jsTechs)
+		} else if jsErr != nil {
+			helper.ErrorPrintf("[!] Error during JavaScript scanning: %v\n", jsErr)
+		}
+	}
 
 	// Assign status code to result
 	result.StatusCode = strconv.Itoa(resp.StatusCode)
@@ -677,7 +699,7 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 
 		var data []byte
 		var err error
-		if !skipDownload {
+		if (!skipDownload) {
 			data, err = wp.downloadJSON(url, lib.Config.Tmpfolder+fileName)
 			if err != nil {
 				helper.ErrorPrintf("[!] Error downloading JSON file %s. Read the default files... Error: %v\n", fileName, err)
@@ -781,4 +803,86 @@ func (wp *Wappalyzer) ScanWebsites(domains []string) ([]WebsiteDetails, error) {
 	}
 
 	return websiteDetails, nil
+}
+
+func (wp *Wappalyzer) scanJsExpressions(domain string, urlStr string, technologies map[string]Technology) ([]WebsiteDetailTechnology, error) {
+	helper.InfoPrintln("[Wappalyzer] Starting JavaScript scanning for:", urlStr)
+	
+	// Create a lightweight headless browser using chromedp
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.Flag("headless", true),
+		chromedp.Flag("disable-gpu", true),
+		chromedp.Flag("no-sandbox", true),
+		chromedp.Flag("disable-dev-shm-usage", true),
+	)
+	
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	
+	ctx, cancel = chromedp.NewContext(ctx)
+	defer cancel()
+	
+	// Set a reasonable timeout
+	ctx, cancel = context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	
+	var detectedTechs []WebsiteDetailTechnology
+	
+	// Navigate to the URL
+	if err := chromedp.Run(ctx, chromedp.Navigate(urlStr)); err != nil {
+		return nil, fmt.Errorf("failed to navigate to %s: %v", urlStr, err)
+	}
+	
+	// Process technologies with JS patterns
+	for name, tech := range technologies {
+		if tech.Js == nil || len(tech.Js) == 0 {
+			continue
+		}
+		
+		for jsPath, jsPattern := range tech.Js {
+			var jsResult string
+			
+			// Build the script to evaluate the JS variable
+			script := fmt.Sprintf(`
+                function getVersion() {
+                  try {
+                    const jsVar = %s;
+                    if (jsVar !== undefined) {
+                      return String(jsVar);
+                    }
+                    return null;
+                  } catch (e) {
+                    return null;
+                  }
+                }
+                getVersion();
+            `, jsPath)
+			
+			// Execute the script
+			err := chromedp.Run(ctx, chromedp.Evaluate(script, &jsResult))
+			if err != nil {
+				helper.VerbosePrintf("[Wappalyzer] Error evaluating JS path %s: %v\n", jsPath, err)
+				continue
+			}
+
+			// If we got a result, check if it matches the pattern
+			if jsResult != "" && jsResult != "null" {
+				helper.VerbosePrintln("[-] JS Scan result:",jsPath, "->", jsResult)
+				matches, err := wp.matchingWithModification(jsPattern, jsResult)
+				if err != nil {
+					helper.ErrorPrintf("[!] Error matching JS pattern for technology %s: %v\n", name, err)
+					continue
+				}
+				
+				if len(matches) > 0 {
+					helper.InfoPrintf("[Wappalyzer] Domain [%s] JS matched for technology: %s\n", domain, name)
+					helper.VerbosePrintln("[-] JS Match result:",jsPattern, "->", matches)
+					
+					detectedTechs = wp.appendToTechnology(detectedTechs, name, matches)
+				}
+			}
+		}
+	}
+	
+	return detectedTechs, nil
 }
