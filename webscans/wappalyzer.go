@@ -835,7 +835,7 @@ func (wp *Wappalyzer) scanJsExpressions(domain string, urlStr string, technologi
 	
 	// Process technologies with JS patterns
 	for name, tech := range technologies {
-		if tech.Js == nil || len(tech.Js) == 0 {
+		if len(tech.Js) == 0 {
 			continue
 		}
 		
