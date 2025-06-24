@@ -49,7 +49,7 @@ func (wp *Wappalyzer) downloadJSON(url, filePath string) ([]byte, error) {
 	if _, err := os.Stat(filePath); err == nil {
 		helper.VerbosePrintf("[-] JSON file %s already exists. Skipping download.\n", filePath)
 	} else {
-		helper.InfoPrintf("[+] JSON file %s starts downloading.\n", filePath)
+		helper.VerbosePrintf("[+] JSON file %s starts downloading.\n", filePath)
 		response, err := http.Get(url)
 		if err != nil {
 			return nil, err
@@ -71,7 +71,7 @@ func (wp *Wappalyzer) downloadJSON(url, filePath string) ([]byte, error) {
 			return nil, err
 		}
 
-		helper.InfoPrintf("[+] JSON file %s downloaded successfully.\n", filePath)
+		helper.VerbosePrintf("[+] JSON file %s downloaded successfully.\n", filePath)
 	}
 
 	// Read the downloaded JSON file

@@ -384,7 +384,7 @@ func (c *Crawler) diffDirectories(domain, dir1, dir2 string) error {
 				if strings.HasSuffix(url, "index") {
 					url = url[:len(url)-6] // Remove "/index"
 				}
-				helper.ResultPrintf("[!] URL %s [%s] does not exist in %s\n", url, relPath, dir2)
+				helper.VerbosePrintf("[!] URL %s [%s] does not exist in %s\n", url, relPath, dir2)
 
 				// Create directories and write the file
 				filePath := filepath.Join(dir1+".diff", relPath)
